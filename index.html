@@ -53,7 +53,7 @@
       margin:0 auto;
       padding:16px;
       display:grid;
-      grid-template-columns: 420px 1fr;
+      grid-template-columns: 1200px 1fr;
       gap:16px;
     }
     @media (max-width: 980px){
@@ -254,9 +254,9 @@
 <header>
   <h1>DevSecOps Team Sizer</h1>
   <p class="sub">
-    Inserisci pattern architetturale, stack, scala e criticità: il tool calcola un indice di complessità e suggerisce
-    <b>dimensione team</b> + <b>competenze</b> per coprire l’intero ciclo di vita DevSecOps.
-    <span class="pill"><b>Nota</b> euristica, non “verità assoluta”.</span>
+    Enter architecture pattern, stack, scale and criticality: the tool computes un complexity index e suwderisce
+    <b>team size</b> + <b>skills</b> to cover the full DevSecOps lifecycle.
+    <span class="pill"><b>Notes</b> heuristic, non “verità assoluta”.</span>
   </p>
 </header>
 
@@ -265,126 +265,128 @@
   <section class="card">
     <div class="hd">
       <div>
-        <div class="sectionTitle">Input</div>
-        <div class="muted" style="font-size:13px;">Profilo del prodotto & carico previsto</div>
+        <div class="sectionTitle">Inputs</div>
+        <div class="muted" style="font-size:13px;">Product profile & expected load</div>
       </div>
       <span class="pill"><b id="scenarioName">Scenario</b> <span class="mono" id="scenarioId">—</span></span>
     </div>
     <div class="bd">
       <div class="row">
         <div>
-          <label for="pattern">Pattern di sviluppo / architettura</label>
+          <label for="pattern">Development / architecture pattern</label>
           <select id="pattern">
-            <option value="monolith">Monolite (classico)</option>
-            <option value="modular_monolith">Monolite modulare (DDD / hexagon)</option>
-            <option value="microservices">Microservizi</option>
+            <option value="monolith">Monolith (classic)</option>
+            <option value="modular_monolith">Modular monolith (DDD / hexagon)</option>
+            <option value="microservices">Microservices</option>
             <option value="event_driven">Event-driven / streaming</option>
             <option value="serverless">Serverless / FaaS</option>
-            <option value="hybrid">Ibrido (mix di tutto)</option>
+            <option value="hybrid">Hybrid (mixed)</option>
           </select>
         </div>
         <div>
-          <label for="maturity">Maturità DevSecOps attuale</label>
+          <label for="maturity">Current DevSecOps maturity</label>
           <select id="maturity">
-            <option value="0">Bassa (manuale, poca automazione)</option>
-            <option value="1" selected>Media (CI/CD base, IaC parziale)</option>
-            <option value="2">Alta (pipeline robuste, SRE, security by design)</option>
+            <option value="0">Low (manual, little automation)</option>
+            <option value="1" selected>Medium (basic CI/CD, partial IaC)</option>
+            <option value="2">High (strong pipelines, SRE, security by design)</option>
           </select>
         </div>
       </div>
 
       <div style="margin-top:14px;">
-        <label>Tipologie di tecnologie utilizzate (seleziona tutte quelle rilevanti)</label>
+        <label>Technology categories in use (select all that apply)</label>
         <div class="chips" id="techChips"></div>
       </div>
 
       <div class="row" style="margin-top:14px;">
         <div>
-          <label for="traffic">Previsione traffico in entrata</label>
+          <label for="traffic">Expected incoming traffic</label>
           <div class="row" style="grid-template-columns: 1.3fr .7fr;">
             <input id="traffic" type="number" min="0" step="1" value="50" />
             <select id="trafficUnit">
               <option value="rps">req/sec</option>
               <option value="rpm">req/min</option>
-              <option value="dau">utenti attivi/giorno</option>
+              <option value="dau">active users/day</option>
               <option value="msgps">msg/sec (IoT)</option>
             </select>
           </div>
-          <div class="small" id="trafficHint">Suggerimento: 50 req/sec ≈ ~4,3 milioni richieste/giorno.</div>
+          <div class="small" id="trafficHint">Tip: 50 req/sec ≈ ~4.3M requests/day.</div>
         </div>
         <div>
-          <label for="compute">Carico di elaborazione previsto</label>
+          <label for="compute">Expected compute load</label>
           <input id="compute" type="range" min="1" max="10" value="5" />
           <div class="inline">
             <span class="pill"><b id="computeLabel">5</b>/10</span>
-            <span class="small">1 = leggero · 10 = pesante (batch/ML/streaming/real-time)</span>
+            <span class="small">1 = light · 10 = heavy (batch/ML/streaming/real-time)</span>
           </div>
         </div>
       </div>
 
       <div class="row" style="margin-top:14px;">
         <div>
-          <label for="risk">Valore rischi / criticità (1–10)</label>
+          <label for="risk">Risk / criticality value (1–10)</label>
           <input id="risk" type="range" min="1" max="10" value="7" />
           <div class="inline">
             <span class="pill"><b id="riskLabel">7</b>/10</span>
-            <span class="help" id="riskHelp">Esempi: banca=10 · e-commerce=8 · gioco a pagamento=7</span>
+            <span class="help" id="riskHelp">Examples: banking=10 · e-commerce=8 · paid game=7</span>
           </div>
         </div>
         <div>
-          <label for="bias">Approccio di staffing</label>
+          <label for="bias">Staffing approach</label>
           <select id="bias">
-            <option value="lean">Lean (team minimo, più rischio)</option>
+            <option value="lean">Lean (smaller team, more risk)</option>
             <option value="balanced" selected>Balanced</option>
-            <option value="conservative">Conservativo (più copertura, meno rischio)</option>
+            <option value="conservative">Conservative (more coverage, less risk)</option>
           </select>
         </div>
       </div>
 
       <div class="btns" style="margin-top:14px;">
-        <button id="btnCalc">Calcola</button>
-        <button class="secondary" id="btnRandom">Esempio rapido</button>
-        <button class="secondary" id="btnSave">Salva scenario</button>
+        <button id="btnCalc">Calculate</button>
+        <button class="secondary" id="btnRandom">Quick example</button>
+        <button class="secondary" id="btnSave">Save scenario</button>
         <button class="danger" id="btnReset">Reset</button>
       </div>
 
       <div class="note">
-        <b>Cosa fa questo tool?</b><br/>
-        Converte input in un <b>indice di complessità</b> e propone una struttura tipo:
+        <b>What does this tool do?</b><br/>
+        It converts inputs into a <b>complexity index</b> and suwdests a structure such as:
         <span class="tag">Product Squad</span>
         <span class="tag">Platform/SRE</span>
         <span class="tag">AppSec</span>
-        + una matrice di competenze DevSecOps (plan→operate→respond).
+        + una matrice di skills DevSecOps (plan→operate→respond).
       </div>
     </div>
   </section>
-
+</main>
+<main class="wrap">
+  
   <!-- OUTPUT -->
   <section class="card">
     <div class="hd">
       <div>
-        <div class="sectionTitle">Output</div>
-        <div class="muted" style="font-size:13px;">Dimensionamento & competenze</div>
+        <div class="sectionTitle">Outputs</div>
+        <div class="muted" style="font-size:13px;">Dimensionamento & skills</div>
       </div>
       <div class="btns">
-        <button class="secondary" id="btnCopyMd">Copia report (Markdown)</button>
-        <button class="secondary" id="btnDownloadJson">Scarica JSON</button>
+        <button class="secondary" id="btnCopyMd">Copy report (Markdown)</button>
+        <button class="secondary" id="btnDownloadJson">Download JSON</button>
       </div>
     </div>
     <div class="bd">
       <div class="kpi">
         <div class="box">
-          <div class="muted">Indice complessità</div>
+          <div class="muted">Complexity index</div>
           <div class="v" id="kComplexity">—</div>
           <div class="bar"><i id="barComplexity"></i></div>
         </div>
         <div class="box">
-          <div class="muted">Headcount suggerito</div>
+          <div class="muted">Suwdested headcount</div>
           <div class="v" id="kHeadcount">—</div>
           <div class="small" id="kHeadcountHint">—</div>
         </div>
         <div class="box">
-          <div class="muted"># Squad (feature teams)</div>
+          <div class="muted"># Squads (feature teams)</div>
           <div class="v" id="kSquads">—</div>
           <div class="small" id="kSquadsHint">—</div>
         </div>
@@ -392,18 +394,18 @@
 
       <div class="grid2" style="margin-top:14px;">
         <div>
-          <h3 class="sectionTitle">Struttura consigliata</h3>
+          <h3 class="sectionTitle">Recommended structure</h3>
           <div id="structure"></div>
-          <div class="note" id="structureNote"></div>
+          <div class="note" id="structureNotes"></div>
         </div>
         <div>
-          <h3 class="sectionTitle">Driver principali</h3>
+          <h3 class="sectionTitle">Key drivers</h3>
           <table>
             <thead>
               <tr>
-                <th>Fattore</th>
+                <th>Factor</th>
                 <th class="right">Score</th>
-                <th>Motivo</th>
+                <th>Why</th>
               </tr>
             </thead>
             <tbody id="drivers"></tbody>
@@ -412,14 +414,14 @@
       </div>
 
       <div style="margin-top:14px;">
-        <h3 class="sectionTitle">Ruoli & FTE suggeriti</h3>
+        <h3 class="sectionTitle">Suwdested roles & FTE</h3>
         <table>
           <thead>
             <tr>
-              <th>Ruolo</th>
+              <th>Role</th>
               <th class="right">FTE</th>
-              <th>Responsabilità (DevSecOps lifecycle)</th>
-              <th>Competenze chiave</th>
+              <th>Responsibilities (DevSecOps lifecycle)</th>
+              <th>Key skills</th>
             </tr>
           </thead>
           <tbody id="roles"></tbody>
@@ -445,7 +447,7 @@
                   <input id="fteActual" type="number" min="0" step="0.5" value="0" />
                 </div>
                 <div>
-                  <label for="costFteYear">Costo medio per FTE / anno (full-loaded)</label>
+                  <label for="costFteYear">Average cost per FTE / year (fully-loaded)</label>
                   <input id="costFteYear" type="number" min="0" step="1000" value="90000" />
                 </div>
               </div>
@@ -470,15 +472,26 @@
               <div class="small" style="margin-top:8px;">
                 Linee: <span class="tag">Costo totale stimato</span> <span class="tag">Costo salari (solo FTE)</span> · Marker: <span class="tag">recommended</span> / <span class="tag">actual</span>
               </div>
+              <div class="note" style="margin-top:10px;">
+                <b>How to read the cost chart</b><br/>
+                The chart compares the <b>total cost</b> (stipendi + effetti indiretti) al variare degli FTE.
+                <ul style="margin:8px 0 0 18px; color: rgba(169,180,207,.95);">
+                  <li><b>Under-sizing</b> (FTE &lt; recommended): cresce la componente <span class="tag">under-penalty</span> → più ritardi, più incidenti, più rework, più rischio operativo.</li>
+                  <li><b>Over-sizing</b> (FTE &gt; recommended): cresce la <span class="tag">waste/coordination</span> → più overhead, onboarding, meeting, merge/conflict, lavoro duplicato.</li>
+                  <li>La linea <span class="tag">Salary</span> è il “minimo” inevitabile; la linea <span class="tag">Total</span> include anche penalty e waste.</li>
+                  <li>Le linee verticali <span class="tag">recommended</span> e <span class="tag">actual</span> ti dicono dove sei rispetto al punto consigliato.</li>
+                </ul>
+              </div>
+
             </div>
           </div>
 
           <div class="card" style="box-shadow:none;">
             <div class="hd" style="border-radius:14px 14px 0 0;">
               <div>
-                <div class="muted" style="font-size:13px;">Tempo — messa in produzione vs dimensionamento</div>
+                <div class="muted" style="font-size:13px;">Time-to-production vs team size</div>
               </div>
-              <span class="pill"><b id="timeHintPill">Weeks</b></span>
+              <span class="pill"><b id="timeHintPill">Giorni lavorativi</b></span>
             </div>
             <div class="bd">
               <div class="row">
@@ -497,14 +510,38 @@
                     <span class="pill"><b id="handoffTaxLabel">0.35</b></span>
                     <span class="small">Più alto = più dipendenze, più meeting, più integrazione.</span>
                   </div>
+  
+              <div class="row" style="margin-top:8px;">
+                <div>
+                  <label for="workDaysPerWeek">Working days per week</label>
+                  <select id="workDaysPerWeek">
+                    <option value="5" selected>5 (lun–ven)</option>
+                    <option value="6">6 (lun–sab)</option>
+                  </select>
+                  <div class="small">The chart expresses time in <b>working days</b> invece che settimane.</div>
                 </div>
+                <div></div>
+              </div>
+              </div>
               </div>
 
               <div class="small" id="timeSummary" style="margin-top:8px;">—</div>
               <canvas id="timeChart" class="chartCanvas" style="margin-top:10px; width:100%; height:240px;"></canvas>
               <div class="small" style="margin-top:8px;">
-                Curva tipica: migliora fino a un “sweet spot”, poi plateau (o peggiora) per overhead.
+                Typical curve: improves up to a “sweet spot”, then plateaus (or worsens) due to overhead. Y axis in <b>working days</b>.
               </div>
+              <div class="note" style="margin-top:10px;">
+                <b>How to read the time chart</b><br/>
+                The curve estimates the <b>time to production</b> in <b>working days</b> al variare degli FTE.
+                <ul style="margin:8px 0 0 18px; color: rgba(169,180,207,.95);">
+                  <li>All’inizio, awdiungere persone riduce il tempo (più throughput).</li>
+                  <li>Dopo un certo punto, entra la <b>coordination tax</b> (handoff, dipendenze, review, merge, comunicazione) → la curva va in <b>plateau</b> o può <b>pewdiorare</b>.</li>
+                  <li><span class="tag">Scope multiplier</span> alza/abbassa tutto (quanto è grande l’obiettivo della release).</li>
+                  <li><span class="tag">Handoff tax</span> modella quanto “enterprise” è il contesto: più alto = più overhead (policy, compliance, multi-team).</li>
+                  <li>Le linee <span class="tag">recommended</span> e <span class="tag">actual</span> indicano lo sweet spot suwderito e la tua posizione reale.</li>
+                </ul>
+              </div>
+
             </div>
           </div>
         </div>
@@ -516,9 +553,9 @@
       </div>
 
 <div style="margin-top:14px;">
-        <h3 class="sectionTitle">Matrice competenze (coverage)</h3>
+        <h3 class="sectionTitle">Skills matrix (coverage)</h3>
         <div class="small" style="margin-bottom:8px;">
-          Valori: 0=non necessario · 1=base · 2=buono · 3=esperto. (Il tool stima la priorità, non “misura” le persone.)
+          Values: 0=not needed · 1=basic · 2=good · 3=expert. (Il tool stima la priorità, non “misura” le persone.)
         </div>
         <div style="overflow:auto;">
           <table id="skillsTable"></table>
@@ -526,7 +563,7 @@
       </div>
 
       <div class="note" style="margin-top:14px;">
-        <b>Tip pratico:</b> se vuoi ridurre headcount senza aumentare rischio, investi in
+        <b>Practical tip:</b> se vuoi ridurre headcount senza aumentare rischio, investi in
         <span class="tag">standardizzazione</span>
         <span class="tag">platform engineering</span>
         <span class="tag">automazione test</span>
@@ -553,40 +590,40 @@
     { id:"mobile", label:"Mobile (iOS/Android)", w:1.1 },
     { id:"backend_api", label:"Backend API (REST/GraphQL)", w:1.0 },
     { id:"grpc", label:"gRPC / RPC", w:1.05 },
-    { id:"db_sql", label:"DB SQL (Postgres/MySQL/SQL Server)", w:1.05 },
-    { id:"db_nosql", label:"DB NoSQL (Mongo/Cassandra/etc.)", w:1.10 },
+    { id:"db_sql", label:"SQL DB (Postgres/MySQL/SQL Server)", w:1.05 },
+    { id:"db_nosql", label:"NoSQL DB (Mongo/Cassandra/etc.)", w:1.10 },
     { id:"cache", label:"Cache (Redis/Ignite)", w:1.05 },
-    { id:"queue", label:"Queue / Broker (Rabbit/ActiveMQ)", w:1.10 },
+    { id:"queue", label:"Queue / Broker (RabbitMQ/ActiveMQ)", w:1.10 },
     { id:"streaming", label:"Streaming (Kafka/Flink)", w:1.20 },
     { id:"search", label:"Search (Elastic/OpenSearch)", w:1.10 },
     { id:"k8s", label:"Kubernetes / Containers", w:1.15 },
     { id:"cloud", label:"Cloud managed services", w:1.10 },
     { id:"iac", label:"IaC (Terraform/Ansible)", w:1.10 },
-    { id:"observability", label:"Observability (OTel/Grafana)", w:1.10 },
+    { id:"observability", label:"Observability (OpenTelemetry/Grafana)", w:1.10 },
     { id:"security", label:"Security tooling (SAST/DAST/Secrets)", w:1.10 },
-    { id:"ci_cd", label:"CI/CD advanced", w:1.05 },
+    { id:"ci_cd", label:"Advanced CI/CD", w:1.05 },
     { id:"ml", label:"ML/AI (inference/training)", w:1.25 }
   ];
 
   const PATTERN = {
-    monolith:        { label:"Monolite", factor:1.00, note:"Setup più semplice, meno overhead di coordinamento." },
-    modular_monolith:{ label:"Monolite modulare", factor:1.15, note:"Ottimo compromesso: separazione + deploy unico." },
-    microservices:   { label:"Microservizi", factor:1.45, note:"Overhead: contract, CI/CD, osservabilità, runtime ops." },
-    event_driven:    { label:"Event-driven", factor:1.55, note:"Gestione stati, idempotenza, ordering, schema evolution." },
-    serverless:      { label:"Serverless", factor:1.35, note:"Ottimo time-to-market ma attenzione a integrazioni e costi." },
-    hybrid:          { label:"Ibrido", factor:1.65, note:"Massima flessibilità, massima complessità organizzativa." },
+    monolith:        { label:"Monolith", factor:1.00, note:"Simpler setup, less coordination overhead." },
+    modular_monolith:{ label:"Monolith modulare", factor:1.15, note:"Great trade-off: separation + single deployable." },
+    microservices:   { label:"Microservices", factor:1.45, note:"Overhead: contracts, CI/CD, observability, runtime ops." },
+    event_driven:    { label:"Event-driven", factor:1.55, note:"State handling, idempotency, ordering, schema evolution." },
+    serverless:      { label:"Serverless", factor:1.35, note:"Great time-to-market, but watch integrations and costs." },
+    hybrid:          { label:"Hybrid", factor:1.65, note:"Max flexibility, max organizational complexity." },
   };
 
   const MATURITY = {
-    0: { label:"Bassa",  factor:1.20, note:"Più persone per coprire attività manuali e rischi operativi." },
-    1: { label:"Media",  factor:1.00, note:"Baseline di automazione, buon equilibrio." },
-    2: { label:"Alta",   factor:0.85, note:"Ottima automazione: riduce carico ripetitivo e incidenti." },
+    0: { label:"Bassa",  factor:1.20, note:"More people needed to cover manual work and operational risk." },
+    1: { label:"Media",  factor:1.00, note:"Automation baseline, good balance." },
+    2: { label:"Alta",   factor:0.85, note:"Strong automation: reduces repetitive load and incidents." },
   };
 
   const BIAS = {
-    lean:         { label:"Lean",         hc:0.88, note:"Team minimo: accetti più rischio e debito operativo." },
-    balanced:     { label:"Balanced",     hc:1.00, note:"Buon equilibrio tra velocità e copertura." },
-    conservative: { label:"Conservativo", hc:1.15, note:"Più ridondanza e specializzazione: meno rischio." }
+    lean:         { label:"Lean",         hc:0.88, note:"Smaller team: accept more risk and operational debt." },
+    balanced:     { label:"Balanced",     hc:1.00, note:"Good balance between speed and coverage." },
+    conservative: { label:"Conservativo", hc:1.15, note:"More redundancy and specialization: less risk." }
   };
 
   // DevSecOps lifecycle facets (priority scored later)
@@ -690,9 +727,9 @@
     const perDay = Math.round(rps * 86400);
     const fmt = perDay.toLocaleString("it-IT");
     if(u === "dau"){
-      return `Stima: ${v.toLocaleString("it-IT")} DAU ≈ ${(rps).toFixed(2)} req/sec (approssimazione).`;
+      return `Estimate: ${v.toLocaleString("it-IT")} DAU ≈ ${(rps).toFixed(2)} req/sec (approximation).`;
     }
-    return `Stima: ${(rps).toFixed(2)} req/sec ≈ ${fmt} richieste/giorno.`;
+    return `Estimate: ${(rps).toFixed(2)} req/sec ≈ ${fmt} richieste/giorno.`;
   }
 
   function complexityIndex(input){
@@ -805,11 +842,11 @@
         roles: [
           role("Product Owner / PM", 0.5, "Plan/Release", ["priorità", "stakeholder", "roadmap"]),
           role("Tech Lead / Architect", 1, "Plan/Code/Operate", ["architettura", "coding standards", "trade-off"]),
-          role("Full-stack Engineer", Math.max(1, hc-2), "Code/Test/Deploy", ["backend+frontend", "CI/CD base", "debugging"]),
+          role("Full-stack Engineer", Math.max(1, hc-2), "Code/Test/Deploy", ["backend+frontend", "CI/CD base", "debuwding"]),
           role("SRE/DevOps (part-time)", 0.5, "Deploy/Operate/Monitor", ["IaC base", "pipelines", "monitoring"]),
           role("AppSec (part-time)", 0.2, "Code/Test/Govern", ["secure coding", "SAST", "secrets"]),
         ],
-        structureNote: "Per team piccoli, privilegia profili T-shaped e automazione (test + CI) per evitare colli di bottiglia."
+        structureNotes: "For small teams, favor T-shaped profiles e automazione (test + CI) per evitare colli di bottiglia."
       });
     }
 
@@ -837,7 +874,7 @@
       squads,
       squadSize,
       roles,
-      structureNote: note
+      structureNotes: note
     });
   }
 
@@ -954,11 +991,11 @@
     drv.innerHTML = "";
     const rows = [
       { name:"Pattern", score: Math.round(PATTERN[input.pattern].factor*10)/10, why: PATTERN[input.pattern].note },
-      { name:"Scala traffico", score: Math.round(c.sTraffic*10)/10, why: `rps stimati: ${c.rps.toFixed(2)} · ${scaleLabel(c.rps)}` },
-      { name:"Carico compute", score: Math.round(c.sCompute*10)/10, why: `Livello ${input.compute}/10 · ${computeLabel(input.compute)}` },
+      { name:"Traffic scale", score: Math.round(c.sTraffic*10)/10, why: `rps stimati: ${c.rps.toFixed(2)} · ${scaleLabel(c.rps)}` },
+      { name:"Compute load", score: Math.round(c.sCompute*10)/10, why: `Level ${input.compute}/10 · ${computeLabel(input.compute)}` },
       { name:"Tech diversity", score: Math.round(c.sTech*10)/10, why: `${input.tech.length} categorie selezionate` },
-      { name:"Rischio", score: Math.round(c.sRisk*10)/10, why: `Criticità ${input.risk}/10` },
-      { name:"Maturità", score: Math.round(MATURITY[input.maturity].factor*10)/10, why: MATURITY[input.maturity].note },
+      { name:"Risk", score: Math.round(c.sRisk*10)/10, why: `Criticità ${input.risk}/10` },
+      { name:"Maturity", score: Math.round(MATURITY[input.maturity].factor*10)/10, why: MATURITY[input.maturity].note },
     ];
     rows.forEach(r => {
       const tr = document.createElement("tr");
@@ -977,10 +1014,10 @@
         <span class="tag">QA automation</span>
       </div>
       <div style="margin-top:10px;" class="muted">
-        Tecnologie: ${input.tech.length ? input.tech.map(id => TECH.find(t=>t.id===id)?.label || id).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join(" ") : "<span class='tag'>—</span>"}
+        Technologies: ${input.tech.length ? input.tech.map(id => TECH.find(t=>t.id===id)?.label || id).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join(" ") : "<span class='tag'>—</span>"}
       </div>
     `;
-    el("structureNote").textContent = staff.structureNote;
+    el("structureNotes").textContent = staff.structureNotes;
 
     // Roles
     const rolesT = el("roles");
@@ -1046,6 +1083,19 @@
     const w = Math.max(0, v);
     const r = Math.round(w*10)/10;
     return `${r}w`;
+  }
+
+  function weeksToWorkdays(weeks, workDaysPerWeek){
+    const wd = Math.max(1, Number(workDaysPerWeek || 5));
+    return Math.max(0, Number(weeks || 0)) * wd;
+  }
+
+  function fmtWorkdays(days){
+    const d = Math.max(0, Number(days || 0));
+    // Round to nearest 0.5 day to avoid jitter, then show integer if close
+    const r = Math.round(d * 2) / 2;
+    const asInt = Math.abs(r - Math.round(r)) < 0.001 ? String(Math.round(r)) : String(r);
+    return `${asInt}wd`;
   }
 
   function ensureCanvasSize(canvas){
@@ -1278,6 +1328,7 @@
     const riskMultiplier = Math.max(0.5, Number(riskMultEl?.value || 1.2));
     const scopeMultiplier = Math.max(0.5, Number(scopeEl?.value || 1.0));
     const handoffTax = clamp(Number(handoffEl?.value || 0.35), 0, 1);
+    const workDaysPerWeek = Math.max(1, Number(document.getElementById("workDaysPerWeek")?.value || 5));
 
     // COST CHART
     const xs = staffingRange(recFte);
@@ -1322,25 +1373,27 @@
       }
     );
 
-    // TIME CHART
-    const weeks = xs.map(x => timeModelWeeks(x, recFte, input, c, scopeMultiplier, handoffTax));
-    const wRec = timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, handoffTax);
-    const wAct = timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, handoffTax);
+    // TIME CHART (working days)
+    const wdSeries = xs.map(x => weeksToWorkdays(timeModelWeeks(x, recFte, input, c, scopeMultiplier, handoffTax), workDaysPerWeek));
+    const wRecWeeks = timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, handoffTax);
+    const wActWeeks = timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, handoffTax);
+    const wdRec = weeksToWorkdays(wRecWeeks, workDaysPerWeek);
+    const wdAct = weeksToWorkdays(wActWeeks, workDaysPerWeek);
 
     const timeSummary = document.getElementById("timeSummary");
     const timeHint = document.getElementById("timeHintPill");
-    if(timeHint) timeHint.textContent = `Recommended ≈ ${fmtWeeks(wRec)}`;
+    if(timeHint) timeHint.textContent = `Recommended ≈ ${fmtWorkdays(wdRec)} (${workDaysPerWeek}wd/week)`;
     if(timeSummary){
-      timeSummary.textContent = `Tempo stimato messa in produzione: recommended ${fmtWeeks(wRec)} · actual ${fmtWeeks(wAct)} (scope ${scopeMultiplier.toFixed(1)}×, handoff ${handoffTax.toFixed(2)}).`;
+      timeSummary.textContent = `Estimated time time-to-production: recommended ≈ ${fmtWorkdays(wdRec)} · actual ≈ ${fmtWorkdays(wdAct)} (${workDaysPerWeek}wd/week, scope ${scopeMultiplier.toFixed(1)}×, handoff ${handoffTax.toFixed(2)}).`;
     }
 
     drawLineChart(
       document.getElementById("timeChart"),
       xs,
-      [{ name:"Weeks", ys: weeks, color:"rgba(125,255,205,.9)" }],
+      [{ name:"Workdays", ys: wdSeries, color:"rgba(125,255,205,.9)" }],
       {
         xLabel: "FTE",
-        yFmt: (y) => Math.round(y) + "w",
+        yFmt: (y) => Math.round(y) + "wd",
         vLines: [
           { x: recFteRounded, label:"recommended", color:"rgba(125,255,205,.8)" },
           { x: Math.round(fteActual*2)/2, label:"actual", color:"rgba(255,206,122,.85)", dash:[4,4] }
@@ -1349,12 +1402,14 @@
     );
   }
 
-  function wireChartInputs(){
-    const ids = ["fteActual","costFteYear","horizonMonths","riskMultiplier","scopeMultiplier","handoffTax"];
+  
+function wireChartInputss(){
+    const ids = ["fteActual","costFteYear","horizonMonths","riskMultiplier","scopeMultiplier","handoffTax","workDaysPerWeek"];
     ids.forEach(id => {
       const e = document.getElementById(id);
       if(!e) return;
-      e.addEventListener("input", () => {
+
+      const onAny = () => {
         if(!currentState){
           const last = localStorage.getItem("devsecops_team_sizer:last");
           if(last){
@@ -1362,14 +1417,17 @@
           }
         }
         updateCharts(currentState);
-      });
+      };
+
+      e.addEventListener("input", onAny);
+      e.addEventListener("change", onAny); // needed for <select>
     });
   }
 
-// -----------------------------
-  // Input reading + persistence
+
+  // Inputs reading + persistence
   // -----------------------------
-  function readInput(){
+  function readInputs(){
     const tech = Array.from(techChips.querySelectorAll("input[type=checkbox]"))
       .filter(x => x.checked)
       .map(x => x.value);
@@ -1386,7 +1444,7 @@
     };
   }
 
-  function setInput(input){
+  function setInputs(input){
     el("pattern").value = input.pattern ?? "modular_monolith";
     el("maturity").value = String(input.maturity ?? "1");
     el("traffic").value = input.traffic ?? 50;
@@ -1403,7 +1461,7 @@
   }
 
   function reset(){
-    setInput({
+    setInputs({
       pattern:"modular_monolith",
       maturity:"1",
       tech:["web_frontend","backend_api","db_sql","ci_cd","observability","iac","k8s"],
@@ -1416,7 +1474,7 @@
     el("scenarioId").textContent = scenarioId();
   }
   function calculate(){
-    const input = readInput();
+    const input = readInputs();
     const c = complexityIndex(input);
     const staff = recommendStaff(input, c);
     render(input, c, staff);
@@ -1453,7 +1511,7 @@
       risk: [4,6,7,8,9,10][Math.floor(Math.random()*6)],
       bias: ["lean","balanced","conservative"][Math.floor(Math.random()*3)]
     };
-    setInput(ex);
+    setInputs(ex);
     el("scenarioId").textContent = scenarioId();
     calculate();
   }
@@ -1478,6 +1536,7 @@ function buildMarkdownReport(state){
     const riskMultiplier = Math.max(0.5, snapNum("riskMultiplier", 1.2));
     const scopeMultiplier = Math.max(0.5, snapNum("scopeMultiplier", 1.0));
     const handoffTax = clamp(snapNum("handoffTax", 0.35), 0, 1);
+    const workDaysPerWeek = Math.max(1, snapNum("workDaysPerWeek", 5));
 
     const recFte = Math.max(0.5, Number(staff.fteSum || staff.headcount || 1));
     const recFteRounded = Math.round(recFte*2)/2;
@@ -1487,9 +1546,11 @@ function buildMarkdownReport(state){
     const costAct = costModelForFte(fteActual, recFte, costFteYear, horizonMonths, input, c, riskMultiplier);
     const costDelta = costAct.total - costRec.total;
 
-    const wRec = timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, handoffTax);
-    const wAct = timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, handoffTax);
-    const wDelta = wAct - wRec;
+    const wRecWeeks = timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, handoffTax);
+    const wActWeeks = timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, handoffTax);
+    const wdRec = weeksToWorkdays(wRecWeeks, workDaysPerWeek);
+    const wdAct = weeksToWorkdays(wActWeeks, workDaysPerWeek);
+    const wdDelta = wdAct - wdRec;
 
     const pr = skillPriorities(input, c);
 
@@ -1501,45 +1562,45 @@ function buildMarkdownReport(state){
 
     const lines = [];
     lines.push(`# DevSecOps Team Sizer — Report`);
-    lines.push(`_Generato: ${new Date().toLocaleString("it-IT")}_`);
+    lines.push(`_Generated: ${new Date().toLocaleString("it-IT")}_`);
     lines.push("");
-    lines.push(`## Input`);
+    lines.push(`## Inputss`);
     lines.push(`- Pattern: **${PATTERN[input.pattern].label}** (factor ${PATTERN[input.pattern].factor})`);
-    lines.push(`- Maturità DevSecOps: **${MATURITY[input.maturity].label}** (factor ${MATURITY[input.maturity].factor})`);
+    lines.push(`- Maturity DevSecOps: **${MATURITY[input.maturity].label}** (factor ${MATURITY[input.maturity].factor})`);
     lines.push(`- Bias staffing: **${BIAS[input.bias].label}** (×${BIAS[input.bias].hc})`);
     lines.push(`- Traffico stimato: **${c.rps.toFixed(2)} req/sec** (${input.traffic} ${input.trafficUnit})`);
-    lines.push(`- Carico compute: **${input.compute}/10** (${computeLabel(input.compute)})`);
-    lines.push(`- Rischio: **${input.risk}/10**`);
-    lines.push(`- Tecnologie: ${techNames.length ? techNames.map(t => '`' + t + '`').join(", ") : "_n/a_"}`);
+    lines.push(`- Compute load: **${input.compute}/10** (${computeLabel(input.compute)})`);
+    lines.push(`- Risk: **${input.risk}/10**`);
+    lines.push(`- Technologies: ${techNames.length ? techNames.map(t => '`' + t + '`').join(", ") : "_n/a_"}`);
     lines.push("");
 
-    lines.push(`## Output sintetico`);
-    lines.push(`- Indice complessità: **${c.index}/100**`);
-    lines.push(`- Headcount suggerito: **${staff.headcount}** (FTE pianificati: ${staff.fteSum})`);
+    lines.push(`## Outputs sintetico`);
+    lines.push(`- Complexity index: **${c.index}/100**`);
+    lines.push(`- Suwdested headcount: **${staff.headcount}** (FTE pianificati: ${staff.fteSum})`);
     lines.push(`- Feature squads: **${staff.squads}** (~${staff.squadSize} persone/squad)`);
     lines.push("");
 
-    lines.push(`## Driver score (componenti del calcolo)`);
-    lines.push(`| Fattore | Valore | Nota |`);
+    lines.push(`## Driver scores (calculation breakdown)`);
+    lines.push(`| Factor | Valore | Notes |`);
     lines.push(`|---|---:|---|`);
     lines.push(`| Pattern factor | ${PATTERN[input.pattern].factor} | ${mdEsc(PATTERN[input.pattern].note)} |`);
     lines.push(`| Maturity factor | ${MATURITY[input.maturity].factor} | ${mdEsc(MATURITY[input.maturity].note)} |`);
     lines.push(`| Traffico (rps) | ${c.rps.toFixed(2)} | Score traffico: ${c.sTraffic.toFixed(1)} · ${scaleLabel(c.rps)} |`);
     lines.push(`| Compute | ${input.compute}/10 | Score compute: ${c.sCompute.toFixed(1)} · ${mdEsc(computeLabel(input.compute))} |`);
     lines.push(`| Tech diversity | ${input.tech.length} | Score tech: ${c.sTech.toFixed(1)} |`);
-    lines.push(`| Rischio | ${input.risk}/10 | Score rischio: ${c.sRisk.toFixed(1)} |`);
+    lines.push(`| Risk | ${input.risk}/10 | Score rischio: ${c.sRisk.toFixed(1)} |`);
     lines.push(`| Indice finale | ${c.index}/100 | Raw=${c.raw.toFixed(1)} · factor=${c.fact.toFixed(2)} |`);
     lines.push("");
 
-    lines.push(`## Ruoli & FTE suggeriti (dettagli)`);
-    lines.push(`| Ruolo | FTE | Responsabilità (lifecycle) | Competenze chiave |`);
+    lines.push(`## Suwdested roles & FTE (dettagli)`);
+    lines.push(`| Role | FTE | Responsabilità (lifecycle) | Key skills |`);
     lines.push(`|---|---:|---|---|`);
     (staff.roles || []).forEach(r => {
       lines.push(`| ${mdEsc(r.name)} | ${r.fte} | ${mdEsc(r.lifecycle)} | ${mdEsc((r.skills||[]).join(", "))} |`);
     });
     lines.push("");
 
-    lines.push(`## Matrice competenze (coverage: 0..3)`);
+    lines.push(`## Matrix skills (coverage: 0..3)`);
     lines.push(`| Area | Priorità | Descrizione | Esempi |`);
     lines.push(`|---|---:|---|---|`);
     FACETS.forEach(f => {
@@ -1549,29 +1610,29 @@ function buildMarkdownReport(state){
     });
     lines.push("");
 
-    lines.push(`## Grafico costo: sotto / sovra dimensionamento`);
-    lines.push(`**Input grafico**`);
+    lines.push(`## Cost chart: under / over staffing`);
+    lines.push(`**Inputs grafico**`);
     lines.push(`- Recommended: **${recFteRounded} FTE** · Actual: **${actFteRounded} FTE**`);
     lines.push(`- Costo medio/FTE/anno: **${money(costFteYear)}** · Orizzonte: **${horizonMonths} mesi** · Risk multiplier: **${riskMultiplier.toFixed(1)}×**`);
     lines.push("");
-    lines.push(`**Risultati (stima)**`);
+    lines.push(`**Results (estimate)**`);
     lines.push(`- Recommended total: **${money(costRec.total)}** (salary ${money(costRec.salaryCost)} · under-penalty ${money(costRec.underPenalty)} · over-waste ${money(costRec.overWaste)})`);
     lines.push(`- Actual total: **${money(costAct.total)}** (salary ${money(costAct.salaryCost)} · under-penalty ${money(costAct.underPenalty)} · over-waste ${money(costAct.overWaste)})`);
     lines.push(`- Delta (Actual − Recommended): **${costDelta >= 0 ? "+" : "−"}${money(Math.abs(costDelta))}** su ${horizonMonths} mesi`);
     lines.push("");
 
-    lines.push(`## Grafico tempo: messa in produzione vs team size`);
-    lines.push(`**Input grafico**`);
-    lines.push(`- Scope multiplier: **${scopeMultiplier.toFixed(1)}×** · Handoff/coordination tax: **${handoffTax.toFixed(2)}**`);
+    lines.push(`## Grafico tempo: time-to-production vs team size`);
+    lines.push(`**Inputs grafico**`);
+    lines.push(`- Scope multiplier: **${scopeMultiplier.toFixed(1)}×** · Handoff/coordination tax: **${handoffTax.toFixed(2)}** · Giorni lavorativi/sett: **${workDaysPerWeek}**`);
     lines.push("");
-    lines.push(`**Risultati (stima)**`);
-    lines.push(`- Recommended: **${fmtWeeks(wRec)}**`);
-    lines.push(`- Actual: **${fmtWeeks(wAct)}**`);
-    lines.push(`- Delta (Actual − Recommended): **${wDelta >= 0 ? "+" : "−"}${fmtWeeks(Math.abs(wDelta))}**`);
+    lines.push(`**Results (estimate)**`);
+    lines.push(`- Recommended: **${fmtWorkdays(wdRec)}**`);
+    lines.push(`- Actual: **${fmtWorkdays(wdAct)}**`);
+    lines.push(`- Delta (Actual − Recommended): **${wdDelta >= 0 ? "+" : "−"}${fmtWorkdays(Math.abs(wdDelta))}**`);
     lines.push("");
 
-    lines.push(`## Note`);
-    lines.push(`- ${staff.structureNote}`);
+    lines.push(`## Notess`);
+    lines.push(`- ${staff.structureNotes}`);
     lines.push(`- I grafici sono euristici: servono a ragionare su trade-off (risk/inefficiency/coordination), non a fare un preventivo.`);
     lines.push("");
     lines.push(`_Heuristic v1: non sostituisce discovery reale, vincoli di budget, roadmap e domain complexity._`);
@@ -1606,12 +1667,12 @@ function buildMarkdownReport(state){
       overlay.innerHTML = `
         <div style="width:min(860px, calc(100% - 24px)); background: rgba(15,23,48,.98); border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,.35);">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <div style="color: rgba(233,237,245,.95); font-weight:700;">Copia manuale</div>
-            <button id="copyOverlayClose" class="secondary" style="padding:8px 10px; border-radius:12px;">Chiudi</button>
+            <div style="color: rgba(233,237,245,.95); font-weight:700;">Manual copy</div>
+            <button id="copyOverlayClose" class="secondary" style="padding:8px 10px; border-radius:12px;">Close</button>
           </div>
           <div style="color: rgba(169,180,207,.95); font-size:12px; margin-top:8px; line-height:1.45;">
-            Il browser potrebbe bloccare la Clipboard API su <span style="font-family: ui-monospace;">file://</span>.
-            Seleziona il testo e copia con <b>Ctrl+C</b> (o Cmd+C).
+            Your browser may block the Clipboard API su <span style="font-family: ui-monospace;">file://</span>.
+            Select the text and copy with <b>Ctrl+C</b> (o Cmd+C).
           </div>
           <textarea id="copyOverlayArea" style="width:100%; margin-top:10px; height: 320px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18); color: #e9edf5; padding:10px; font-family: ui-monospace; font-size:12px; outline:none;"></textarea>
         </div>
@@ -1647,7 +1708,7 @@ function buildMarkdownReport(state){
       ta.setSelectionRange(0, ta.value.length);
       const ok = document.execCommand("copy");
       document.body.removeChild(ta);
-      if(ok){ toast("Report Markdown copiato negli appunti."); return true; }
+      if(ok){ toast("Markdown report copied to clipboard."); return true; }
     } catch (e) {}
     // Last resort: manual dialog
     showCopyDialog(textToCopy);
@@ -1665,7 +1726,7 @@ function buildMarkdownReport(state){
     // Clipboard API works only on secure contexts (https:// or localhost) in many browsers.
     if(navigator.clipboard && typeof navigator.clipboard.writeText === "function"){
       navigator.clipboard.writeText(md).then(() => {
-        toast("Report Markdown copiato negli appunti.");
+        toast("Markdown report copied to clipboard.");
       }).catch(() => {
         fallbackCopyText(md);
       });
@@ -1719,8 +1780,8 @@ function buildMarkdownReport(state){
   // -----------------------------
   el("btnCalc").addEventListener("click", calculate);
   el("btnRandom").addEventListener("click", randomExample);
-  el("btnSave").addEventListener("click", () => { saveScenario(); toast("Scenario salvato (localStorage)."); });
-  el("btnReset").addEventListener("click", () => { reset(); calculate(); toast("Reset completato."); });
+  el("btnSave").addEventListener("click", () => { saveScenario(); toast("Scenario saved (localStorage)."); });
+  el("btnReset").addEventListener("click", () => { reset(); calculate(); toast("Reset completed."); });
 
   el("btnCopyMd").addEventListener("click", copyMarkdown);
   el("btnDownloadJson").addEventListener("click", downloadJson);
@@ -1730,13 +1791,13 @@ function buildMarkdownReport(state){
   if(last){
     try{
       const state = JSON.parse(last);
-      if(state?.input) setInput(state.input);
+      if(state?.input) setInputs(state.input);
     }catch{}
   } else {
     reset();
   }
   updateRanges();
-  wireChartInputs();
+  wireChartInputss();
   calculate();
 })();
 </script>
