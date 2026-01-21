@@ -1,1396 +1,1133 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>DevSecOps Team Sizer — Heuristics-based</title>
   <style>
     :root{
-      --bg:#0b1020;
-      --panel:#0f1730;
-      --panel2:#0d142a;
+      --bg1:#0b1020; --bg2:#0a1633;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.12);
       --text:#e9edf5;
-      --muted:#a9b4cf;
-      --line:#223055;
-      --accent:#7aa2ff;
-      --accent2:#7dffcd;
-      --warn:#ffce7a;
-      --bad:#ff7aa2;
-      --ok:#7dffcd;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --r:16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      --muted: rgba(169,180,207,.95);
+      --muted2: rgba(169,180,207,.75);
+      --accent: #7dffcd;
+      --warn: #ffce7a;
+      --danger: #ff7a90;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family:var(--sans);
-      background: radial-gradient(1200px 700px at 20% 0%, rgba(122,162,255,.18), transparent 50%),
-                  radial-gradient(900px 600px at 80% 20%, rgba(125,255,205,.10), transparent 55%),
-                  radial-gradient(800px 600px at 60% 90%, rgba(255,122,162,.10), transparent 55%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--text);
+      background: radial-gradient(1200px 700px at 15% -10%, rgba(125,255,205,.22), transparent 60%),
+                  radial-gradient(900px 600px at 90% 0%, rgba(255,206,122,.16), transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
     }
     header{
-      padding:24px 16px 8px;
+      padding:22px 18px 8px;
       max-width:1200px;
       margin:0 auto;
     }
     h1{
       margin:0;
-      font-size: clamp(20px, 2.2vw, 28px);
+      font-size:22px;
       letter-spacing:.2px;
     }
     .sub{
-      margin:10px 0 0;
+      margin-top:8px;
       color:var(--muted);
-      line-height:1.5;
-      max-width: 80ch;
-    }
-    .wrap{
-      max-width:1200px;
-      margin:0 auto;
-      padding:16px;
-      display:grid;
-      grid-template-columns: 1200px 1fr;
-      gap:16px;
-    }
-    @media (max-width: 980px){
-      .wrap{grid-template-columns: 1fr;}
-    }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      border:1px solid rgba(255,255,255,.08);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .hd{
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      background: linear-gradient(180deg, rgba(122,162,255,.11), transparent 80%);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:8px;
-    }
-    .card .bd{ padding:16px; }
-    .muted{color:var(--muted)}
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
-    @media (max-width: 520px){ .row{grid-template-columns:1fr;} }
-    label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px;}
-    select, input[type="number"], input[type="text"]{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:var(--text);
-      outline:none;
-    }
-    input[type="range"]{ width:100%; }
-    .chips{display:flex; flex-wrap:wrap; gap:8px; }
-    .chip{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      padding:8px 10px;
-      border-radius:999px;
-      font-size:13px;
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      transition: transform .05s ease, background .2s ease, border .2s ease;
-    }
-    .chip:hover{transform: translateY(-1px); border-color: rgba(122,162,255,.35)}
-    .chip input{accent-color: var(--accent)}
-    .kpi{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:12px;
-      margin-top:12px;
-    }
-    @media (max-width: 520px){ .kpi{grid-template-columns:1fr;} }
-    .kpi .box{
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      background: rgba(0,0,0,.14);
-      padding:12px;
-    }
-    .kpi .v{
-      font-size:22px;
-      font-weight:700;
-      margin-top:6px;
-      letter-spacing:.3px;
-    }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.16);
-      color: var(--muted);
-      white-space:nowrap;
-    }
-    .pill b{color: var(--text)}
-    .btns{display:flex; flex-wrap:wrap; gap:8px;}
-    button{
-      cursor:pointer;
-      border:none;
-      padding:10px 12px;
-      border-radius:12px;
-      font-weight:600;
-      color: var(--text);
-      background: linear-gradient(180deg, rgba(122,162,255,.9), rgba(122,162,255,.55));
-      box-shadow: 0 10px 30px rgba(122,162,255,.20);
-      transition: transform .05s ease, filter .15s ease;
-    }
-    button:hover{filter:brightness(1.05)}
-    button:active{transform: translateY(1px)}
-    button.secondary{
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:none;
-      color: var(--text);
-    }
-    button.danger{
-      background: rgba(255,122,162,.18);
-      border:1px solid rgba(255,122,162,.32);
-      box-shadow:none;
-    }
-    .note{
-      margin-top:12px;
-      border-left:3px solid rgba(122,162,255,.55);
-      padding:10px 12px;
-      border-radius: 12px;
-      background: rgba(122,162,255,.08);
-      color: var(--muted);
       line-height:1.45;
       font-size:13px;
+      max-width:980px;
     }
-    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:14px;}
-    @media (max-width: 980px){ .grid2{grid-template-columns:1fr;} }
-    .sectionTitle{
-      margin:0 0 8px;
-      font-size:14px;
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      font-size:12px;
       color: var(--muted);
-      letter-spacing:.2px;
-      text-transform: uppercase;
+      margin-left:8px;
     }
+    main{
+      max-width:1200px;
+      margin:0 auto;
+      padding:10px 18px 40px;
+      display:grid;
+      gap:14px;
+    }
+    @media(max-width:1100px){
+      main{grid-template-columns:1fr}
+    }
+    .card{
+      background: var(--card);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      padding:14px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+    .hd{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+      margin-bottom:10px;
+    }
+    .title{
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:14px;
+    }
+    .muted{ color:var(--muted); font-size:12px; line-height:1.4}
+    .muted2{ color:var(--muted2); font-size:12px; line-height:1.4}
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media(max-width:680px){
+      .row{grid-template-columns:1fr}
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:4px 0 6px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(125,255,205,.55);
+      box-shadow: 0 0 0 3px rgba(125,255,205,.12);
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:8px;
+    }
+    .chip{
+      user-select:none;
+      cursor:pointer;
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      color: var(--muted);
+      transition: .15s transform, .15s background, .15s border-color;
+    }
+    .chip:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+    .chip.on{
+      background: rgba(125,255,205,.12);
+      border-color: rgba(125,255,205,.45);
+      color: var(--text);
+    }
+    .btns{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+      align-items:center;
+    }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(125,255,205,.14);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:700;
+      letter-spacing:.15px;
+      transition:.15s transform,.15s background,.15s border-color;
+    }
+    button:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); }
+    button.secondary{ background: rgba(0,0,0,.18); }
+    button.warn{ background: rgba(255,206,122,.12); }
+    button.danger{ background: rgba(255,122,144,.12); }
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+      margin-top:8px;
+    }
+    @media(max-width:900px){ .kpis{ grid-template-columns: repeat(2, 1fr);} }
+    .kpi{
+      background: rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:12px;
+    }
+    .kpi .k{ color: var(--muted); font-size:12px;}
+    .kpi .v{ margin-top:4px; font-weight:900; font-size:18px; letter-spacing:.2px}
+    .kpi .h{ margin-top:2px; color: var(--muted2); font-size:12px;}
     table{
       width:100%;
-      border-collapse: separate;
-      border-spacing:0;
-      overflow:hidden;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.14);
+      border-collapse: collapse;
+      margin-top:10px;
+      font-size:12px;
     }
     th, td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      border-right:1px solid rgba(255,255,255,.06);
-      font-size:13px;
+      padding:9px 8px;
+      border-bottom:1px solid rgba(255,255,255,.10);
       vertical-align:top;
     }
-    th{ color: var(--muted); font-weight:600; background: rgba(255,255,255,.03); }
-    tr:last-child td{border-bottom:none}
-    th:last-child, td:last-child{border-right:none}
+    th{ color: var(--muted); text-align:left; font-weight:800;}
+    td{ color: var(--text);}
     .right{ text-align:right; }
-    .mono{ font-family: var(--mono); font-size:12px; }
-    .bar{
-      height:10px; width:100%;
-      border-radius:999px;
-      background: rgba(255,255,255,.08);
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.10);
-    }
-    .bar > i{
-      display:block;
-      height:100%;
-      width:50%;
-      background: linear-gradient(90deg, rgba(122,162,255,.9), rgba(125,255,205,.7));
-    }
     .tag{
       display:inline-block;
-      padding:4px 8px;
+      padding:2px 7px;
       border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.15);
+      color: var(--muted);
+      font-size:11px;
+    }
+    .sectionTitle{
+      margin:14px 0 0;
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .small{ font-size:12px; color: var(--muted2); line-height:1.4; }
+    .note{
+      margin-top:10px;
+      padding:10px 10px;
+      border-radius:14px;
       border:1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.16);
       color: var(--muted);
       font-size:12px;
-      margin:2px 4px 2px 0;
+      line-height:1.45;
     }
-    footer{
-      max-width:1200px;
-      margin:0 auto;
-      padding: 0 16px 24px;
-      color: var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-    .small{ font-size:12px; color: var(--muted); }
-    .inline{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .help{
-      font-size:12px;
-      color: var(--muted);
-      background: rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.10);
-      padding:8px 10px;
-      border-radius: 12px;
-    }
-  
-    .chartCanvas{
+    .canvasWrap{
+      margin-top:10px;
+      padding:10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.14);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:14px;
     }
-</style>
+    canvas{ width:100%; height:260px; display:block; }
+    .inline{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:space-between;
+    }
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.75);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 12px;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 9999;
+    }
+    .toast.on{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+  </style>
 </head>
 <body>
 <header>
-  <h1>DevSecOps Team Sizer</h1>
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <h1>DevSecOps Team Sizer</h1>
+    <span class="pill"><b>Heuristic</b> (not a guarantee)</span>
+  </div>
   <p class="sub">
-    Enter architecture pattern, stack, scale and criticality: the tool computes un complexity index e suwderisce
-    <b>team size</b> + <b>skills</b> to cover the full DevSecOps lifecycle.
-    <span class="pill"><b>Notes</b> heuristic, non “verità assoluta”.</span>
+    Enter architecture pattern, stack, scale and criticality. The tool estimates a <b>complexity index</b>, suggests <b>team size</b>,
+    <b>skills coverage</b> and a DevSecOps-oriented structure. Useful for early planning and trade-off discussions.
   </p>
 </header>
 
-<main class="wrap">
+<main>
   <!-- INPUT -->
   <section class="card">
     <div class="hd">
       <div>
-        <div class="sectionTitle">Inputs</div>
-        <div class="muted" style="font-size:13px;">Product profile & expected load</div>
+        <div class="title">Product profile & expected load</div>
+        <div class="muted">Inputs used to compute complexity and recommend team sizing.</div>
       </div>
-      <span class="pill"><b id="scenarioName">Scenario</b> <span class="mono" id="scenarioId">—</span></span>
+      <div class="pill"><b>Inputs</b></div>
     </div>
-    <div class="bd">
-      <div class="row">
-        <div>
-          <label for="pattern">Development / architecture pattern</label>
-          <select id="pattern">
-            <option value="monolith">Monolith (classic)</option>
-            <option value="modular_monolith">Modular monolith (DDD / hexagon)</option>
-            <option value="microservices">Microservices</option>
-            <option value="event_driven">Event-driven / streaming</option>
-            <option value="serverless">Serverless / FaaS</option>
-            <option value="hybrid">Hybrid (mixed)</option>
+
+    <div class="row">
+      <div>
+        <label for="pattern">Development / architecture pattern</label>
+        <select id="pattern">
+          <option value="monolith">Monolith (classic)</option>
+          <option value="modular">Modular monolith (DDD / hexagon)</option>
+          <option value="microservices">Microservices</option>
+          <option value="eventdriven">Event-driven / streaming</option>
+          <option value="serverless">Serverless / FaaS</option>
+          <option value="hybrid">Hybrid (mixed)</option>
+        </select>
+      </div>
+      <div>
+        <label for="maturity">Current DevSecOps maturity</label>
+        <select id="maturity">
+          <option value="0">Low (manual, little automation)</option>
+          <option value="1" selected>Medium (basic CI/CD, partial IaC)</option>
+          <option value="2">High (strong pipelines, SRE, security-by-design)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label>Technology categories in use (select all that apply)</label>
+      <div class="chips" id="techChips"></div>
+      <div class="small" style="margin-top:6px;">More categories typically means more integration surface, more tooling, and more specialized skills needed.</div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label for="traffic">Expected incoming traffic</label>
+        <div class="row" style="grid-template-columns:1.3fr .7fr; margin-top:0;">
+          <input id="traffic" type="number" min="0" step="1" value="50"/>
+          <select id="trafficUnit">
+            <option value="rps" selected>req/sec</option>
+            <option value="rpm">req/min</option>
+            <option value="dau">active users/day</option>
+            <option value="mps">msg/sec (IoT)</option>
           </select>
         </div>
-        <div>
-          <label for="maturity">Current DevSecOps maturity</label>
-          <select id="maturity">
-            <option value="0">Low (manual, little automation)</option>
-            <option value="1" selected>Medium (basic CI/CD, partial IaC)</option>
-            <option value="2">High (strong pipelines, SRE, security by design)</option>
-          </select>
+        <div class="small">Tip: 50 req/sec ≈ ~4.3M requests/day.</div>
+      </div>
+      <div>
+        <label for="compute">Expected compute load</label>
+        <input id="compute" type="range" min="1" max="10" value="5"/>
+        <div class="inline">
+          <span class="small">1 = light · 10 = heavy</span>
+          <span class="pill"><b id="computeLabel">5/10</b></span>
         </div>
       </div>
+    </div>
 
-      <div style="margin-top:14px;">
-        <label>Technology categories in use (select all that apply)</label>
-        <div class="chips" id="techChips"></div>
-      </div>
-
-      <div class="row" style="margin-top:14px;">
-        <div>
-          <label for="traffic">Expected incoming traffic</label>
-          <div class="row" style="grid-template-columns: 1.3fr .7fr;">
-            <input id="traffic" type="number" min="0" step="1" value="50" />
-            <select id="trafficUnit">
-              <option value="rps">req/sec</option>
-              <option value="rpm">req/min</option>
-              <option value="dau">active users/day</option>
-              <option value="msgps">msg/sec (IoT)</option>
-            </select>
-          </div>
-          <div class="small" id="trafficHint">Tip: 50 req/sec ≈ ~4.3M requests/day.</div>
-        </div>
-        <div>
-          <label for="compute">Expected compute load</label>
-          <input id="compute" type="range" min="1" max="10" value="5" />
-          <div class="inline">
-            <span class="pill"><b id="computeLabel">5</b>/10</span>
-            <span class="small">1 = light · 10 = heavy (batch/ML/streaming/real-time)</span>
-          </div>
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label for="risk">Risk / criticality value (1–10)</label>
+        <input id="risk" type="range" min="1" max="10" value="7"/>
+        <div class="inline">
+          <span class="small">Examples: banking=10 · e-commerce=8 · paid game=7</span>
+          <span class="pill"><b id="riskLabel">7/10</b></span>
         </div>
       </div>
-
-      <div class="row" style="margin-top:14px;">
-        <div>
-          <label for="risk">Risk / criticality value (1–10)</label>
-          <input id="risk" type="range" min="1" max="10" value="7" />
-          <div class="inline">
-            <span class="pill"><b id="riskLabel">7</b>/10</span>
-            <span class="help" id="riskHelp">Examples: banking=10 · e-commerce=8 · paid game=7</span>
-          </div>
-        </div>
-        <div>
-          <label for="bias">Staffing approach</label>
-          <select id="bias">
-            <option value="lean">Lean (smaller team, more risk)</option>
-            <option value="balanced" selected>Balanced</option>
-            <option value="conservative">Conservative (more coverage, less risk)</option>
-          </select>
-        </div>
+      <div>
+        <label for="bias">Staffing approach</label>
+        <select id="bias">
+          <option value="lean">Lean (smaller team, more risk)</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="conservative">Conservative (more coverage, less risk)</option>
+        </select>
       </div>
+    </div>
 
-      <div class="btns" style="margin-top:14px;">
-        <button id="btnCalc">Calculate</button>
-        <button class="secondary" id="btnRandom">Quick example</button>
-        <button class="secondary" id="btnSave">Save scenario</button>
-        <button class="danger" id="btnReset">Reset</button>
-      </div>
+    <div class="btns">
+      <button id="btnCalc">Calculate</button>
+      <button class="secondary" id="btnExample">Quick example</button>
+      <button class="secondary" id="btnSave">Save scenario</button>
+      <button class="danger" id="btnReset">Reset</button>
+    </div>
 
-      <div class="note">
-        <b>What does this tool do?</b><br/>
-        It converts inputs into a <b>complexity index</b> and suwdests a structure such as:
-        <span class="tag">Product Squad</span>
-        <span class="tag">Platform/SRE</span>
-        <span class="tag">AppSec</span>
-        + una matrice di skills DevSecOps (plan→operate→respond).
-      </div>
+    <div class="note">
+      <b>How it works</b><br/>
+      It computes a complexity index using: pattern factor, maturity factor, traffic scale, compute intensity, tech diversity and risk.
+      Then it maps complexity to FTE + recommended roles for DevSecOps lifecycle coverage.
     </div>
   </section>
-</main>
-<main class="wrap">
-  
+
   <!-- OUTPUT -->
   <section class="card">
     <div class="hd">
       <div>
-        <div class="sectionTitle">Outputs</div>
-        <div class="muted" style="font-size:13px;">Dimensionamento & skills</div>
+        <div class="title">Sizing & skills</div>
+        <div class="muted">Recommendations + breakdown. Use this as a starting point, then adjust using real constraints.</div>
       </div>
-      <div class="btns">
-        <button class="secondary" id="btnCopyMd">Copy report (Markdown)</button>
+      <div class="btns" style="margin-top:0;">
         <button class="secondary" id="btnDownloadJson">Download JSON</button>
       </div>
     </div>
-    <div class="bd">
+
+    <div class="kpis">
       <div class="kpi">
-        <div class="box">
-          <div class="muted">Complexity index</div>
-          <div class="v" id="kComplexity">—</div>
-          <div class="bar"><i id="barComplexity"></i></div>
-        </div>
-        <div class="box">
-          <div class="muted">Suwdested headcount</div>
-          <div class="v" id="kHeadcount">—</div>
-          <div class="small" id="kHeadcountHint">—</div>
-        </div>
-        <div class="box">
-          <div class="muted"># Squads (feature teams)</div>
-          <div class="v" id="kSquads">—</div>
-          <div class="small" id="kSquadsHint">—</div>
-        </div>
+        <div class="k">Complexity index</div>
+        <div class="v" id="kComplexity">—</div>
+        <div class="h" id="kComplexityHint">—</div>
       </div>
-
-      <div class="grid2" style="margin-top:14px;">
-        <div>
-          <h3 class="sectionTitle">Recommended structure</h3>
-          <div id="structure"></div>
-          <div class="note" id="structureNotes"></div>
-        </div>
-        <div>
-          <h3 class="sectionTitle">Key drivers</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Factor</th>
-                <th class="right">Score</th>
-                <th>Why</th>
-              </tr>
-            </thead>
-            <tbody id="drivers"></tbody>
-          </table>
-        </div>
+      <div class="kpi">
+        <div class="k">Suggested headcount</div>
+        <div class="v" id="kHeadcount">—</div>
+        <div class="h" id="kHeadcountHint">—</div>
       </div>
-
-      <div style="margin-top:14px;">
-        <h3 class="sectionTitle">Suwdested roles & FTE</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Role</th>
-              <th class="right">FTE</th>
-              <th>Responsibilities (DevSecOps lifecycle)</th>
-              <th>Key skills</th>
-            </tr>
-          </thead>
-          <tbody id="roles"></tbody>
-        </table>
+      <div class="kpi">
+        <div class="k"># Squads (feature teams)</div>
+        <div class="v" id="kSquads">—</div>
+        <div class="h" id="kSquadsHint">—</div>
       </div>
-
-      
-      <div style="margin-top:14px;">
-        <h3 class="sectionTitle">Impatto del dimensionamento</h3>
-
-        <div class="grid2" style="margin-top:8px;">
-          <div class="card" style="box-shadow:none;">
-            <div class="hd" style="border-radius:14px 14px 0 0;">
-              <div>
-                <div class="muted" style="font-size:13px;">Costo — sotto / sovra dimensionamento</div>
-              </div>
-              <span class="pill"><b id="recFtePill">FTE recommended</b></span>
-            </div>
-            <div class="bd">
-              <div class="row">
-                <div>
-                  <label for="fteActual">FTE attuali / pianificati (confronto)</label>
-                  <input id="fteActual" type="number" min="0" step="0.5" value="0" />
-                </div>
-                <div>
-                  <label for="costFteYear">Average cost per FTE / year (fully-loaded)</label>
-                  <input id="costFteYear" type="number" min="0" step="1000" value="90000" />
-                </div>
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <div>
-                  <label for="horizonMonths">Orizzonte (mesi)</label>
-                  <input id="horizonMonths" type="number" min="1" step="1" value="12" />
-                </div>
-                <div>
-                  <label for="riskMultiplier">Moltiplicatore “costo rischio” (understaffing)</label>
-                  <input id="riskMultiplier" type="range" min="0.5" max="3" step="0.1" value="1.2" />
-                  <div class="inline">
-                    <span class="pill"><b id="riskMultiplierLabel">1.2</b>x</span>
-                    <span class="small">Include: ritardi, incidenti, failure cost, opportunity cost (stima).</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="small" id="costSummary" style="margin-top:8px;">—</div>
-              <canvas id="costChart" class="chartCanvas" style="margin-top:10px; width:100%; height:240px;"></canvas>
-              <div class="small" style="margin-top:8px;">
-                Linee: <span class="tag">Costo totale stimato</span> <span class="tag">Costo salari (solo FTE)</span> · Marker: <span class="tag">recommended</span> / <span class="tag">actual</span>
-              </div>
-              <div class="note" style="margin-top:10px;">
-                <b>How to read the cost chart</b><br/>
-                The chart compares the <b>total cost</b> (stipendi + effetti indiretti) al variare degli FTE.
-                <ul style="margin:8px 0 0 18px; color: rgba(169,180,207,.95);">
-                  <li><b>Under-sizing</b> (FTE &lt; recommended): cresce la componente <span class="tag">under-penalty</span> → più ritardi, più incidenti, più rework, più rischio operativo.</li>
-                  <li><b>Over-sizing</b> (FTE &gt; recommended): cresce la <span class="tag">waste/coordination</span> → più overhead, onboarding, meeting, merge/conflict, lavoro duplicato.</li>
-                  <li>La linea <span class="tag">Salary</span> è il “minimo” inevitabile; la linea <span class="tag">Total</span> include anche penalty e waste.</li>
-                  <li>Le linee verticali <span class="tag">recommended</span> e <span class="tag">actual</span> ti dicono dove sei rispetto al punto consigliato.</li>
-                </ul>
-              </div>
-
-            </div>
-          </div>
-
-          <div class="card" style="box-shadow:none;">
-            <div class="hd" style="border-radius:14px 14px 0 0;">
-              <div>
-                <div class="muted" style="font-size:13px;">Time-to-production vs team size</div>
-              </div>
-              <span class="pill"><b id="timeHintPill">Giorni lavorativi</b></span>
-            </div>
-            <div class="bd">
-              <div class="row">
-                <div>
-                  <label for="scopeMultiplier">Scope / ambizione release</label>
-                  <input id="scopeMultiplier" type="range" min="0.5" max="2.0" step="0.1" value="1.0" />
-                  <div class="inline">
-                    <span class="pill"><b id="scopeMultiplierLabel">1.0</b>x</span>
-                    <span class="small">0.5 = MVP · 1.0 = standard · 2.0 = “big bang”.</span>
-                  </div>
-                </div>
-                <div>
-                  <label for="handoffTax">Tax di handoff / coordinamento</label>
-                  <input id="handoffTax" type="range" min="0" max="1" step="0.05" value="0.35" />
-                  <div class="inline">
-                    <span class="pill"><b id="handoffTaxLabel">0.35</b></span>
-                    <span class="small">Più alto = più dipendenze, più meeting, più integrazione.</span>
-                  </div>
-  
-              <div class="row" style="margin-top:8px;">
-                <div>
-                  <label for="workDaysPerWeek">Working days per week</label>
-                  <select id="workDaysPerWeek">
-                    <option value="5" selected>5 (lun–ven)</option>
-                    <option value="6">6 (lun–sab)</option>
-                  </select>
-                  <div class="small">The chart expresses time in <b>working days</b> invece che settimane.</div>
-                </div>
-                <div></div>
-              </div>
-              </div>
-              </div>
-
-              <div class="small" id="timeSummary" style="margin-top:8px;">—</div>
-              <canvas id="timeChart" class="chartCanvas" style="margin-top:10px; width:100%; height:240px;"></canvas>
-              <div class="small" style="margin-top:8px;">
-                Typical curve: improves up to a “sweet spot”, then plateaus (or worsens) due to overhead. Y axis in <b>working days</b>.
-              </div>
-              <div class="note" style="margin-top:10px;">
-                <b>How to read the time chart</b><br/>
-                The curve estimates the <b>time to production</b> in <b>working days</b> al variare degli FTE.
-                <ul style="margin:8px 0 0 18px; color: rgba(169,180,207,.95);">
-                  <li>All’inizio, awdiungere persone riduce il tempo (più throughput).</li>
-                  <li>Dopo un certo punto, entra la <b>coordination tax</b> (handoff, dipendenze, review, merge, comunicazione) → la curva va in <b>plateau</b> o può <b>pewdiorare</b>.</li>
-                  <li><span class="tag">Scope multiplier</span> alza/abbassa tutto (quanto è grande l’obiettivo della release).</li>
-                  <li><span class="tag">Handoff tax</span> modella quanto “enterprise” è il contesto: più alto = più overhead (policy, compliance, multi-team).</li>
-                  <li>Le linee <span class="tag">recommended</span> e <span class="tag">actual</span> indicano lo sweet spot suwderito e la tua posizione reale.</li>
-                </ul>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <div class="note" style="margin-top:10px;">
-          <b>Interpretazione rapida:</b> sotto il recommended la curva costo cresce per rischio/ritardi; sopra cresce per inefficienza e costo salariale.
-          Il grafico tempo mostra dove il team smette di accelerare (coordination overhead).
-        </div>
-      </div>
-
-<div style="margin-top:14px;">
-        <h3 class="sectionTitle">Skills matrix (coverage)</h3>
-        <div class="small" style="margin-bottom:8px;">
-          Values: 0=not needed · 1=basic · 2=good · 3=expert. (Il tool stima la priorità, non “misura” le persone.)
-        </div>
-        <div style="overflow:auto;">
-          <table id="skillsTable"></table>
-        </div>
-      </div>
-
-      <div class="note" style="margin-top:14px;">
-        <b>Practical tip:</b> se vuoi ridurre headcount senza aumentare rischio, investi in
-        <span class="tag">standardizzazione</span>
-        <span class="tag">platform engineering</span>
-        <span class="tag">automazione test</span>
-        <span class="tag">security shift-left</span>.
+      <div class="kpi">
+        <div class="k">Key driver</div>
+        <div class="v" id="kDriver">—</div>
+        <div class="h" id="kDriverHint">—</div>
       </div>
     </div>
+
+    <div style="margin-top:14px;">
+      <h3 class="sectionTitle">Recommended structure</h3>
+      <div class="small" id="structureNote">—</div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <h3 class="sectionTitle">Drivers</h3>
+      <table id="driversTbl">
+        <thead>
+          <tr><th>Factor</th><th class="right">Score</th><th>Reason</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:14px;">
+      <h3 class="sectionTitle">Suggested roles & FTE</h3>
+      <table id="rolesTbl">
+        <thead>
+          <tr><th>Role</th><th class="right">FTE</th><th>Responsibilities (lifecycle)</th><th>Key skills</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="small" id="rolesHint"></div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <h3 class="sectionTitle">Skills matrix (coverage)</h3>
+      <div class="small">Scale: 0=not needed · 1=basic · 2=good · 3=expert. (The tool estimates priority, it does not “measure” people.)</div>
+      <table id="skillsTbl">
+        <thead>
+          <tr><th>Area</th><th class="right">Priority</th><th>Description</th><th>Examples</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:16px;">
+      <h3 class="sectionTitle">Cost: under / over staffing the team</h3>
+
+      <div class="row" style="margin-top:8px;">
+        <div>
+          <label for="fteActual">Planned / actual FTE</label>
+          <input id="fteActual" type="number" min="0" step="0.5" value="0"/>
+          <div class="small">Tip: enter your real FTE (including part-time) to compare against the recommendation.</div>
+        </div>
+        <div>
+          <label for="costFteYear">Average cost per FTE / year (fully-loaded)</label>
+          <input id="costFteYear" type="number" min="0" step="1000" value="90000"/>
+          <div class="small">Includes: salary + taxes + tooling + overhead (estimate). Use plain numbers (e.g. 90000). Comma/dot formats are accepted (e.g. 90,000 or 90.000).</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <div>
+          <label for="horizonMonths">Evaluation horizon (months)</label>
+          <input id="horizonMonths" type="number" min="1" step="1" value="12"/>
+          <div class="small">Typical: 6–12 months for delivery; 12+ for “stable operations”.</div>
+        </div>
+        <div>
+          <label for="riskMultiplier">Risk cost multiplier (under-staffing)</label>
+          <input id="riskMultiplier" type="number" min="0.5" step="0.1" value="1.2"/>
+          <div class="small">Increases indirect cost of incidents, delays, rework and compliance pressure.</div>
+        </div>
+      </div>
+
+      <div class="canvasWrap">
+        <div class="inline">
+          <div class="muted2">Lines: Salary (payroll), Total (salary + penalty/waste).</div>
+          <span class="pill"><b id="costHintPill">—</b></span>
+        </div>
+        <canvas id="costChart" width="900" height="300"></canvas>
+        <div class="small" id="costSummary"></div>
+
+        <div class="note" style="margin-top:10px;">
+          <b>How to read the cost chart</b><br/>
+          This chart compares <b>total cost</b> (payroll + indirect effects) across different team sizes (FTE).
+          <ul style="margin:8px 0 0 18px; color: rgba(169,180,207,.95);">
+            <li><b>Under-staffing</b> (FTE &lt; recommended): the <span class="tag">under-penalty</span> grows → more delays, incidents, rework, and compliance risk.</li>
+            <li><b>Over-staffing</b> (FTE &gt; recommended): the <span class="tag">waste/coordination</span> grows → more overhead, onboarding, meetings, merge conflicts, and duplicate work.</li>
+            <li><span class="tag">Salary</span> is the baseline payroll cost; <span class="tag">Total</span> includes salary + penalty + waste.</li>
+            <li>The vertical lines <span class="tag">recommended</span> and <span class="tag">actual</span> show where you are versus the suggested point.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <h3 class="sectionTitle">Time-to-production vs team size</h3>
+
+      <div class="row" style="margin-top:8px;">
+        <div>
+          <label for="scopeMultiplier">Scope multiplier (release ambition)</label>
+          <input id="scopeMultiplier" type="number" min="0.5" step="0.1" value="1.0"/>
+          <div class="small">Higher = bigger release goal (more scope), thus more time.</div>
+        </div>
+        <div>
+          <label for="handoffTax">Handoff / coordination tax</label>
+          <input id="handoffTax" type="range" min="0" max="1" step="0.05" value="0.35"/>
+          <div class="inline">
+            <span class="small">Higher = more dependencies, policies, multi-team overhead.</span>
+            <span class="pill"><b id="handoffTaxLabel">0.35</b></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <div>
+          <label for="workDaysPerWeek">Working days per week</label>
+          <select id="workDaysPerWeek">
+            <option value="5" selected>5 (Mon–Fri)</option>
+            <option value="6">6 (Mon–Sat)</option>
+          </select>
+          <div class="small">The chart shows time in <b>working days</b>.</div>
+        </div>
+        <div></div>
+      </div>
+
+      <div class="canvasWrap">
+        <div class="inline">
+          <div class="muted2">Typical curve: improves up to a sweet spot, then plateaus (or worsens) due to coordination overhead. Y axis in <b>working days</b>.</div>
+          <span class="pill"><b id="timeHintPill">Working days</b></span>
+        </div>
+        <canvas id="timeChart" width="900" height="300"></canvas>
+        <div class="small" id="timeSummary"></div>
+
+        <div class="note" style="margin-top:10px;">
+          <b>How to read the time chart</b><br/>
+          The curve estimates <b>time-to-production</b> in <b>working days</b> as team size (FTE) changes.
+          <ul style="margin:8px 0 0 18px; color: rgba(169,180,207,.95);">
+            <li>At first, adding people reduces time (more throughput).</li>
+            <li>After a point, <b>coordination tax</b> (handoffs, dependencies, reviews, merges, communication) dominates → the curve plateaus or can even worsen.</li>
+            <li><span class="tag">Scope multiplier</span> shifts the whole curve up/down (how big the release goal is).</li>
+            <li><span class="tag">Handoff tax</span> models how “enterprise” the context is: higher = more overhead (policies, compliance, multi-team).</li>
+            <li>The lines <span class="tag">recommended</span> and <span class="tag">actual</span> indicate the suggested sweet spot and your current position.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
   </section>
 </main>
 
-<footer>
-  <div class="mono">
-    Modello: heuristic v1 — (pattern × scala × tech-diversity × rischio) → staff & skills.
-    Personalizza pesi nel codice se vuoi adattarlo al tuo contesto (IoT, fintech, e-commerce, ecc.).
-  </div>
-</footer>
+<div class="toast" id="toast"></div>
 
 <script>
 (() => {
   // -----------------------------
   // Data
-  // -----------------------------
   const TECH = [
-    { id:"web_frontend", label:"Web Frontend (SPA/MFE)", w:1.0 },
-    { id:"mobile", label:"Mobile (iOS/Android)", w:1.1 },
-    { id:"backend_api", label:"Backend API (REST/GraphQL)", w:1.0 },
-    { id:"grpc", label:"gRPC / RPC", w:1.05 },
-    { id:"db_sql", label:"SQL DB (Postgres/MySQL/SQL Server)", w:1.05 },
-    { id:"db_nosql", label:"NoSQL DB (Mongo/Cassandra/etc.)", w:1.10 },
-    { id:"cache", label:"Cache (Redis/Ignite)", w:1.05 },
-    { id:"queue", label:"Queue / Broker (RabbitMQ/ActiveMQ)", w:1.10 },
-    { id:"streaming", label:"Streaming (Kafka/Flink)", w:1.20 },
-    { id:"search", label:"Search (Elastic/OpenSearch)", w:1.10 },
-    { id:"k8s", label:"Kubernetes / Containers", w:1.15 },
-    { id:"cloud", label:"Cloud managed services", w:1.10 },
-    { id:"iac", label:"IaC (Terraform/Ansible)", w:1.10 },
-    { id:"observability", label:"Observability (OpenTelemetry/Grafana)", w:1.10 },
-    { id:"security", label:"Security tooling (SAST/DAST/Secrets)", w:1.10 },
-    { id:"ci_cd", label:"Advanced CI/CD", w:1.05 },
-    { id:"ml", label:"ML/AI (inference/training)", w:1.25 }
+    { id:"frontend", label:"Web Frontend (SPA/MFE)" },
+    { id:"mobile", label:"Mobile (iOS/Android)" },
+    { id:"api", label:"Backend API (REST/GraphQL)" },
+    { id:"grpc", label:"gRPC / RPC" },
+    { id:"sqldb", label:"SQL DB (Postgres/MySQL/SQL Server)" },
+    { id:"nosql", label:"NoSQL DB (Mongo/Cassandra/etc.)" },
+    { id:"cache", label:"Cache (Redis/Ignite)" },
+    { id:"broker", label:"Queue / Broker (RabbitMQ/ActiveMQ)" },
+    { id:"stream", label:"Streaming (Kafka/Flink)" },
+    { id:"search", label:"Search (Elastic/OpenSearch)" },
+    { id:"k8s", label:"Kubernetes / Containers" },
+    { id:"cloud", label:"Cloud managed services" },
+    { id:"iac", label:"IaC (Terraform/Ansible)" },
+    { id:"obs", label:"Observability (OpenTelemetry/Grafana)" },
+    { id:"sec", label:"Security tooling (SAST/DAST/Secrets)" },
+    { id:"cicd", label:"Advanced CI/CD" },
+    { id:"ml", label:"ML/AI (inference/training)" },
   ];
 
   const PATTERN = {
-    monolith:        { label:"Monolith", factor:1.00, note:"Simpler setup, less coordination overhead." },
-    modular_monolith:{ label:"Monolith modulare", factor:1.15, note:"Great trade-off: separation + single deployable." },
-    microservices:   { label:"Microservices", factor:1.45, note:"Overhead: contracts, CI/CD, observability, runtime ops." },
-    event_driven:    { label:"Event-driven", factor:1.55, note:"State handling, idempotency, ordering, schema evolution." },
-    serverless:      { label:"Serverless", factor:1.35, note:"Great time-to-market, but watch integrations and costs." },
-    hybrid:          { label:"Hybrid", factor:1.65, note:"Max flexibility, max organizational complexity." },
+    monolith:      { label:"Monolith", factor:1.00, note:"Simpler setup, less coordination overhead." },
+    modular:       { label:"Modular monolith", factor:1.18, note:"Great trade-off: separation + single deployable." },
+    microservices: { label:"Microservices", factor:1.45, note:"Overhead: contracts, CI/CD, observability, runtime ops." },
+    eventdriven:   { label:"Event-driven", factor:1.55, note:"State, idempotency, ordering, schema evolution." },
+    serverless:    { label:"Serverless", factor:1.35, note:"Great time-to-market; watch integration + cost." },
+    hybrid:        { label:"Hybrid", factor:1.65, note:"Max flexibility, max organizational complexity." },
   };
 
   const MATURITY = {
-    0: { label:"Bassa",  factor:1.20, note:"More people needed to cover manual work and operational risk." },
-    1: { label:"Media",  factor:1.00, note:"Automation baseline, good balance." },
-    2: { label:"Alta",   factor:0.85, note:"Strong automation: reduces repetitive load and incidents." },
+    0: { label:"Low", factor:1.20, note:"More people needed to cover manual work and operational risk." },
+    1: { label:"Medium", factor:1.00, note:"Automation baseline, good balance." },
+    2: { label:"High", factor:0.88, note:"Strong automation reduces repetitive load and incidents." },
   };
 
   const BIAS = {
-    lean:         { label:"Lean",         hc:0.88, note:"Smaller team: accept more risk and operational debt." },
-    balanced:     { label:"Balanced",     hc:1.00, note:"Good balance between speed and coverage." },
-    conservative: { label:"Conservativo", hc:1.15, note:"More redundancy and specialization: less risk." }
+    lean:         { label:"Lean", hc:0.88, note:"Smaller team: accept more risk and operational debt." },
+    balanced:     { label:"Balanced", hc:1.00, note:"Good balance between speed and coverage." },
+    conservative: { label:"Conservative", hc:1.15, note:"More redundancy and specialization: less risk." },
   };
 
-  // DevSecOps lifecycle facets (priority scored later)
   const FACETS = [
-    { id:"plan", label:"Plan", desc:"discovery, backlog, threat modeling, arch decisions" },
-    { id:"code", label:"Code", desc:"dev practices, secure coding, code review, branching" },
-    { id:"build", label:"Build", desc:"CI, build reproducibility, artifacts, SBOM" },
-    { id:"test", label:"Test", desc:"unit/integration/e2e, perf test, security scans" },
-    { id:"release", label:"Release", desc:"versioning, approvals, change mgmt, policy-as-code" },
-    { id:"deploy", label:"Deploy", desc:"CD, IaC, progressive delivery, rollback" },
-    { id:"operate", label:"Operate", desc:"runtime ops, on-call, SLO, capacity, cost" },
-    { id:"monitor", label:"Monitor", desc:"metrics/logs/traces, alerting, dashboards" },
-    { id:"respond", label:"Respond", desc:"incident response, postmortem, vuln mgmt" },
-    { id:"govern", label:"Govern", desc:"compliance, audit trails, access control, data governance" }
+    { id:"product", label:"Product & delivery", desc:"Discovery, scope, roadmap, prioritization, release planning." },
+    { id:"backend", label:"Backend engineering", desc:"API design, data modeling, performance, resilience patterns." },
+    { id:"frontend", label:"Frontend / UX", desc:"Web UI, micro-frontends, design systems, accessibility, performance." },
+    { id:"data", label:"Data & storage", desc:"SQL/NoSQL modeling, migrations, retention, backup/restore." },
+    { id:"platform", label:"Platform / SRE", desc:"Infra, k8s, reliability, capacity, incident response, on-call." },
+    { id:"cicd", label:"CI/CD & release engineering", desc:"Pipelines, environments, deployment strategies, automation." },
+    { id:"security", label:"Security & compliance", desc:"Threat modeling, secure SDLC, SAST/DAST, secrets, audits." },
+    { id:"observability", label:"Observability", desc:"Tracing/metrics/logs, SLOs, dashboards, alerting." },
+    { id:"qa", label:"Quality engineering", desc:"Test strategy, automation, performance tests, test data." },
+    { id:"arch", label:"Architecture & governance", desc:"Boundaries, contracts, ADRs, standards, tech radar." },
   ];
 
+  function facetExamples(id){
+    switch(id){
+      case "product": return ["roadmap", "backlog", "release plan"];
+      case "backend": return ["API", "domain logic", "resilience"];
+      case "frontend": return ["SPA/MFE", "design system", "perf budget"];
+      case "data": return ["migrations", "indexes", "retention"];
+      case "platform": return ["k8s", "IaC", "on-call"];
+      case "cicd": return ["pipelines", "blue/green", "feature flags"];
+      case "security": return ["SAST", "DAST", "secrets", "threat model"];
+      case "observability": return ["OTel", "SLOs", "dashboards"];
+      case "qa": return ["test automation", "load tests", "contract tests"];
+      case "arch": return ["ADRs", "standards", "governance"];
+      default: return ["—"];
+    }
+  }
+
   // -----------------------------
-  // DOM
-  // -----------------------------
+  // DOM helpers
   const el = (id) => document.getElementById(id);
+  const toastEl = el("toast");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("on");
+    setTimeout(() => toastEl.classList.remove("on"), 1600);
+  }
 
-  const scenarioId = () => Math.random().toString(16).slice(2, 8).toUpperCase();
-
-  // chips
+  // Build tech chips
   const techChips = el("techChips");
+  const selectedTech = new Set(["frontend","api","sqldb","cicd","obs","sec","k8s"]);
   TECH.forEach(t => {
-    const d = document.createElement("label");
-    d.className = "chip";
-    d.innerHTML = `<input type="checkbox" value="${t.id}" /> <span>${t.label}</span>`;
+    const d = document.createElement("div");
+    d.className = "chip" + (selectedTech.has(t.id) ? " on" : "");
+    d.textContent = t.label;
+    d.dataset.id = t.id;
+    d.addEventListener("click", () => {
+      const id = d.dataset.id;
+      if(selectedTech.has(id)){ selectedTech.delete(id); d.classList.remove("on"); }
+      else { selectedTech.add(id); d.classList.add("on"); }
+    });
     techChips.appendChild(d);
   });
 
-  // defaults
-  el("scenarioId").textContent = scenarioId();
-
-  // ranges
-  const updateRanges = () => {
-    el("computeLabel").textContent = el("compute").value;
-    el("riskLabel").textContent = el("risk").value;
-    const u = el("trafficUnit").value;
-    const v = Number(el("traffic").value || 0);
-    el("trafficHint").textContent = trafficHint(v, u);
-  };
-
-  el("compute").addEventListener("input", updateRanges);
-  el("risk").addEventListener("input", updateRanges);
-  el("traffic").addEventListener("input", updateRanges);
-  el("trafficUnit").addEventListener("change", updateRanges);
+  // Live labels
+  const compute = el("compute");
+  const risk = el("risk");
+  const handoffTax = el("handoffTax");
+  function syncSliders(){
+    el("computeLabel").textContent = `${compute.value}/10`;
+    el("riskLabel").textContent = `${risk.value}/10`;
+    el("handoffTaxLabel").textContent = Number(handoffTax.value).toFixed(2);
+  }
+  compute.addEventListener("input", syncSliders);
+  risk.addEventListener("input", syncSliders);
+  handoffTax.addEventListener("input", syncSliders);
+  syncSliders();
 
   // -----------------------------
-  // Scoring helpers
-  // -----------------------------
-  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-  function trafficToRps(value, unit){
-    const v = Math.max(0, Number(value || 0));
+  // Core model
+  function toRps(value, unit){
+    const v = Math.max(0, Number(value||0));
     if(unit === "rps") return v;
     if(unit === "rpm") return v / 60;
+    if(unit === "mps") return v; // treat as msg/sec ~ rps scale
     if(unit === "dau"){
-      // Very rough: DAU -> rps. Assume 10 actions/user/day, spread on 10 hours.
-      // rps = (dau*10)/(10*3600)
-      return (v * 10) / 36000;
+      // Assume avg 10 actions/user/day and 18 hours active window.
+      const actions = v * 10;
+      const seconds = 18 * 3600;
+      return actions / seconds;
     }
-    if(unit === "msgps") return v; // treat like rps
     return v;
   }
 
-  function trafficScore(rps){
-    // piecewise, returns 0..30
-    if(rps <= 1) return 6;
-    if(rps <= 10) return 10;
-    if(rps <= 50) return 14;
-    if(rps <= 200) return 18;
-    if(rps <= 800) return 23;
-    if(rps <= 2000) return 26;
-    return 30;
+  function scaleLabel(rps){
+    if(rps <= 0.2) return "very low";
+    if(rps <= 2) return "low";
+    if(rps <= 20) return "medium";
+    if(rps <= 100) return "high (already relevant)";
+    if(rps <= 500) return "very high";
+    return "extreme";
   }
 
-  function computeScore(x){ // x 1..10 -> 5..25
-    const v = clamp(Number(x||1), 1, 10);
-    return 4 + v * 2.1; // ~6..25
+  function computeLabel(x){
+    const v = Number(x||0);
+    if(v <= 3) return "light (CRUD / simple rules)";
+    if(v <= 6) return "medium (aggregations / moderate compute)";
+    if(v <= 8) return "heavy (real-time / batch + complex logic)";
+    return "very heavy (ML / streaming / intensive workloads)";
   }
 
-  function techDiversityScore(selectedIds){
-    // diversity = count + weights => 5..25
-    const items = TECH.filter(t => selectedIds.includes(t.id));
-    const count = items.length;
-    const weightSum = items.reduce((a,t)=>a+t.w, 0);
-    const base = 5 + Math.min(12, count) * 1.2;  // 5..19.4
-    const bonus = Math.min(6, (weightSum - count) * 4); // tech "heaviness"
-    return clamp(base + bonus, 5, 25);
-  }
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-  function riskScore(risk){ // 1..10 -> 5..25
-    const r = clamp(Number(risk||1), 1, 10);
-    return 3 + r * 2.2; // 5.2..25
-  }
+  function parseLocaleNumber(val, fallback=0){
+    if(val === null || val === undefined) return fallback;
+    if(typeof val === "number") return Number.isFinite(val) ? val : fallback;
+    let s = String(val).trim();
+    if(!s) return fallback;
 
-  function trafficHint(v, u){
-    const rps = trafficToRps(v,u);
-    const perDay = Math.round(rps * 86400);
-    const fmt = perDay.toLocaleString("it-IT");
-    if(u === "dau"){
-      return `Estimate: ${v.toLocaleString("it-IT")} DAU ≈ ${(rps).toFixed(2)} req/sec (approximation).`;
+    // remove spaces and common currency symbols
+    s = s.replace(/\s/g, "").replace(/[€$£]/g, "");
+
+    const hasComma = s.includes(",");
+    const hasDot = s.includes(".");
+
+    if(hasComma && hasDot){
+      // assume dot is thousands separator and comma is decimal separator
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if(hasComma && !hasDot){
+      // comma as decimal separator
+      s = s.replace(",", ".");
+    } else if(hasDot && !hasComma){
+      // dot could be decimal or thousands. If it looks like thousands grouping, remove dots.
+      if(/^\d{1,3}(\.\d{3})+$/.test(s)){
+        s = s.replace(/\./g, "");
+      }
     }
-    return `Estimate: ${(rps).toFixed(2)} req/sec ≈ ${fmt} richieste/giorno.`;
+
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : fallback;
   }
+
 
   function complexityIndex(input){
-    const pat = PATTERN[input.pattern];
-    const mat = MATURITY[input.maturity];
-    const risk = Number(input.risk);
-    const compute = Number(input.compute);
-    const rps = trafficToRps(input.traffic, input.trafficUnit);
+    const rps = toRps(input.traffic, input.trafficUnit);
+    // scores 0..100 components
+    const sTraffic = clamp((Math.log10(rps + 1) / Math.log10(500 + 1)) * 100, 0, 100);
+    const sCompute = clamp((input.compute/10) * 100, 0, 100);
+    const sTech = clamp((input.tech.length / 12) * 100, 0, 100);
+    const sRisk = clamp((input.risk/10) * 100, 0, 100);
 
-    const sTraffic = trafficScore(rps);
-    const sCompute = computeScore(compute);
-    const sTech = techDiversityScore(input.tech);
-    const sRisk = riskScore(risk);
+    const raw = 0.30*sTraffic + 0.25*sCompute + 0.20*sTech + 0.25*sRisk;
+    const fact = PATTERN[input.pattern].factor * MATURITY[input.maturity].factor;
+    const index = clamp(raw * fact, 0, 100);
 
-    // base 0..100-ish
-    const raw = (sTraffic + sCompute + sTech + sRisk); // about 21..105
-    // multiplicative factors (pattern + maturity)
-    const fact = pat.factor * mat.factor;
-
-    // normalize to 0..100
-    const norm = clamp((raw * fact) * 0.92, 10, 100);
-
-    return {
-      rps, sTraffic, sCompute, sTech, sRisk,
-      raw, fact,
-      index: Math.round(norm)
-    };
+    return { rps, sTraffic, sCompute, sTech, sRisk, raw, fact, index: Math.round(index) };
   }
 
-  // -----------------------------
-  // Staffing model
-  // -----------------------------
+  function skillPriorities(input, c){
+    // return 0..3 per facet
+    const pri = {};
+    const base = c.index/100;
+
+    const techSet = new Set(input.tech);
+    const has = (id) => techSet.has(id);
+
+    // Product: always needed; more with risk
+    pri.product = clamp(Math.round(1 + base*1.2 + (input.risk/10)*1.0), 0, 3);
+
+    // Backend: more if API/streaming/microservices
+    pri.backend = clamp(Math.round(1 + base*1.5 + (has("api")?0.6:0) + (has("stream")?0.6:0)), 0, 3);
+
+    // Frontend: if frontend/mobile selected
+    pri.frontend = clamp(Math.round((has("frontend")||has("mobile")) ? (1 + base*1.0) : (base>0.65?1:0)), 0, 3);
+
+    // Data: if DB/cache/streaming
+    pri.data = clamp(Math.round(0.7 + base*1.3 + (has("sqldb")?0.5:0) + (has("nosql")?0.4:0) + (has("cache")?0.3:0) + (has("stream")?0.4:0)), 0, 3);
+
+    // Platform/SRE: if k8s/cloud/stream/broker
+    pri.platform = clamp(Math.round(0.7 + base*1.6 + (has("k8s")?0.8:0) + (has("cloud")?0.6:0) + (input.risk>=8?0.6:0)), 0, 3);
+
+    // CI/CD: always; more if microservices
+    pri.cicd = clamp(Math.round(1 + base*1.4 + (input.pattern==="microservices"?0.6:0)), 0, 3);
+
+    // Security: strongly tied to risk
+    pri.security = clamp(Math.round(0.7 + base*1.2 + (input.risk/10)*1.6 + (has("sec")?0.4:0)), 0, 3);
+
+    // Observability: tied to scale and microservices
+    pri.observability = clamp(Math.round(0.7 + base*1.2 + (c.sTraffic/100)*1.2 + (input.pattern!=="monolith"?0.3:0)), 0, 3);
+
+    // QA: tied to risk + compute
+    pri.qa = clamp(Math.round(0.6 + base*1.0 + (input.risk/10)*1.0 + (input.compute/10)*0.7), 0, 3);
+
+    // Architecture/governance: more with microservices/hybrid
+    pri.arch = clamp(Math.round(0.5 + base*1.0 + (input.pattern==="microservices"||input.pattern==="hybrid"?0.8:0)), 0, 3);
+
+    return pri;
+  }
+
   function recommendStaff(input, c){
-    // Convert index to headcount. Use squads of 5–8 (feature) + platform + security.
-    // Base headcount from complexity:
-    // 10->4, 30->7, 50->12, 70->18, 85->26, 100->38 (rough curve)
-    const idx = c.index;
-
-    // Non-linear curve
-    const base = Math.round( 3 + Math.pow(idx / 18, 1.7) * 4.8 ); // yields ~4..40
-
+    // Map complexity to FTE
+    const base = 3.0 + (c.index/100)*11.0; // 3..14
     const bias = BIAS[input.bias].hc;
-    const hc = Math.max(3, Math.round(base * bias));
+    const fteSum = Math.round((base*bias)*2)/2; // steps of 0.5
 
-    // Determine squad count
-    // 1 squad <=10; 2 squads <=18; 3 <=26; 4 <=34; else 5+
-    let squads = 1;
-    if(hc > 10) squads = 2;
-    if(hc > 18) squads = 3;
-    if(hc > 26) squads = 4;
-    if(hc > 34) squads = 5;
+    // squads: start from 1, then grow slowly; keep squad size 5..8
+    const squadSizeTarget = clamp(5 + (input.maturity==2?1:0), 5, 8);
+    const squads = clamp(Math.round(fteSum / squadSizeTarget), 1, 6);
+    const squadSize = Math.max(4, Math.round((fteSum / squads)));
 
-    // Feature squad size target
-    const squadSize = clamp(Math.round(hc / squads), 5, 9);
+    // Roles allocation
+    const pri = skillPriorities(input, c);
 
-    // Shared teams sizes
-    const isHighRisk = Number(input.risk) >= 8;
-    const isHighScale = c.rps >= 200 || Number(input.compute) >= 8;
-
-    let platform = 1;
-    if(idx >= 55) platform = 2;
-    if(idx >= 80) platform = 3;
-    if(isHighScale && idx >= 65) platform += 1; // extra
-    platform = clamp(platform, 1, 5);
-
-    let appsec = 0.5;
-    if(isHighRisk) appsec = 1;
-    if(idx >= 80 && isHighRisk) appsec = 2;
-    if(idx >= 95) appsec = Math.max(appsec, 2);
-    if(input.tech.includes("security")) appsec = Math.max(appsec, 1);
-
-    let qa = 1;
-    if(idx >= 55) qa = 2;
-    if(idx >= 80) qa = 3;
-    qa = clamp(qa, 1, 4);
-
-    let ux = input.tech.includes("web_frontend") || input.tech.includes("mobile") ? 0.5 : 0;
-    if(idx >= 55 && ux > 0) ux = 1;
-
-    let dataEng = (input.tech.includes("streaming") || input.tech.includes("ml") || input.tech.includes("search")) ? 1 : 0;
-    if(idx >= 70 && dataEng > 0) dataEng = 2;
-
-    let dba = (input.tech.includes("db_sql") || input.tech.includes("db_nosql")) ? 0.5 : 0;
-    if(idx >= 70 && dba > 0) dba = 1;
-
-    // Leadership
-    const tl = squads; // 1 TL per squad
-    const em = idx >= 55 ? 1 : 0.5;
-    const po = 1;
-
-    // Engineers distribution (remaining after shared/lead roles)
-    const shared = po + em + platform + appsec + qa + ux + dataEng + dba;
-    const remaining = Math.max(0, hc - Math.round(shared));
-
-    // Split into backend/frontend based on selected tech
-    const hasFE = input.tech.includes("web_frontend") || input.tech.includes("mobile");
-    const hasBE = input.tech.includes("backend_api") || input.tech.includes("grpc");
-    const feShare = hasFE ? (hasBE ? 0.35 : 0.60) : 0.10;
-    let fe = Math.round(remaining * feShare);
-    let be = remaining - fe;
-    if(!hasFE){ fe = Math.min(fe, 1); be = remaining - fe; }
-
-    // Ensure minimum core engineers
-    if(hc <= 6){
-      // For tiny teams, keep it simple
-      return finalizeStaff({
-        headcount: hc,
-        squads: 1,
-        squadSize: Math.max(3, hc),
-        roles: [
-          role("Product Owner / PM", 0.5, "Plan/Release", ["priorità", "stakeholder", "roadmap"]),
-          role("Tech Lead / Architect", 1, "Plan/Code/Operate", ["architettura", "coding standards", "trade-off"]),
-          role("Full-stack Engineer", Math.max(1, hc-2), "Code/Test/Deploy", ["backend+frontend", "CI/CD base", "debuwding"]),
-          role("SRE/DevOps (part-time)", 0.5, "Deploy/Operate/Monitor", ["IaC base", "pipelines", "monitoring"]),
-          role("AppSec (part-time)", 0.2, "Code/Test/Govern", ["secure coding", "SAST", "secrets"]),
-        ],
-        structureNotes: "For small teams, favor T-shaped profiles e automazione (test + CI) per evitare colli di bottiglia."
-      });
-    }
+    // Helper: assign role with fte + lifecycle + skills
+    const role = (name, fte, lifecycle, skills) => ({ name, fte: Math.round(fte*2)/2, lifecycle, skills });
 
     const roles = [];
-    roles.push(role("Product Owner / PM", po, "Plan/Release", ["product discovery", "priorità", "stakeholder mgmt"]));
-    roles.push(role("Engineering Manager", em, "Plan/Operate", ["delivery", "people", "process & metrics"]));
-    roles.push(role("Tech Lead / Architect (per squad)", tl, "Plan/Code/Deploy", ["architecture", "API contracts", "quality bar"]));
-    roles.push(role("Backend Engineer", be, "Code/Test/Build", ["API design", "data modeling", "performance"]));
-    if(hasFE) roles.push(role("Frontend/Mobile Engineer", fe, "Code/Test", ["UI/UX implementation", "state mgmt", "performance FE"]));
-    if(dataEng>0) roles.push(role("Data/Streaming Engineer", dataEng, "Build/Operate", ["pipelines", "schema evolution", "backpressure"]));
-    roles.push(role("QA / Test Automation", qa, "Test/Release", ["automation", "quality gates", "test strategy"]));
-    roles.push(role("Platform/SRE", platform, "Deploy/Operate/Monitor", ["IaC", "reliability", "observability", "incident mgmt"]));
-    roles.push(role("AppSec / Security Engineer", appsec, "Code/Test/Govern", ["threat modeling", "SAST/DAST", "policy-as-code"]));
-    if(ux>0) roles.push(role("UX/UI Designer", ux, "Plan/Test", ["design system", "usability", "accessibility"]));
-    if(dba>0) roles.push(role("DBA / Data Modeling (part-time)", dba, "Plan/Operate", ["indexing", "backup/restore", "data retention"]));
 
-    const note = [
-      PATTERN[input.pattern].note,
-      MATURITY[input.maturity].note,
-      BIAS[input.bias].note
-    ].join(" ");
+    // Product/PM
+    const po = clamp(0.5 + pri.product*0.15 + (input.risk>=8?0.2:0), 0.5, 1.5);
+    roles.push(role("Product Owner / PM", po, "Plan / Release", ["roadmap", "prioritization", "stakeholder mgmt"]));
 
-    return finalizeStaff({
-      headcount: hc,
-      squads,
-      squadSize,
-      roles,
-      structureNotes: note
-    });
-  }
+    // Tech Lead / Architect
+    const tl = clamp(0.7 + pri.arch*0.25 + (input.pattern==="microservices"?0.4:0), 0.8, 2.0);
+    roles.push(role("Tech Lead / Architect", tl, "Design / Review", ["architecture", "boundaries", "standards", "ADR"]));
 
-  function role(name, fte, lifecycle, skills){
-    return { name, fte: round05(fte), lifecycle, skills };
-  }
-  function round05(x){
-    return Math.round(Number(x) * 2) / 2;
-  }
+    // Backend engineers
+    const be = clamp(1.0 + pri.backend*0.8 + (c.sTraffic>55?0.5:0) + (input.pattern==="microservices"?0.6:0), 1.0, 6.0);
+    roles.push(role("Backend Engineer(s)", be, "Build / Operate", ["APIs", "data modeling", "resilience", "performance"]));
 
-  function finalizeStaff(plan){
-    // ensure ordering and nice formatting
-    plan.roles = plan.roles.filter(r => r.fte > 0);
-    const sum = plan.roles.reduce((a,r)=>a+r.fte, 0);
-    plan.fteSum = Math.round(sum*10)/10;
-    return plan;
-  }
+    // Frontend engineers
+    const feNeed = (new Set(input.tech).has("frontend") || new Set(input.tech).has("mobile")) ? 1 : 0;
+    const fe = clamp(feNeed*(0.8 + pri.frontend*0.7), 0, 4.0);
+    if(fe>0) roles.push(role("Frontend Engineer(s)", fe, "Build / Release", ["UI", "UX", "state mgmt", "perf"]));
 
-  // -----------------------------
-  // Skill priority model
-  // -----------------------------
-  function skillPriorities(input, c){
-    // score 0..3 for each facet
-    const idx = c.index;
-    const risk = Number(input.risk);
-    const compute = Number(input.compute);
-    const rps = c.rps;
+    // Data engineer / DBA-ish
+    const de = clamp(0.3 + pri.data*0.45 + (new Set(input.tech).has("stream")?0.4:0), 0.3, 2.5);
+    roles.push(role("Data / DB Engineer", de, "Design / Operate", ["migrations", "indexes", "retention", "backup"]));
 
-    const hasK8s = input.tech.includes("k8s");
-    const hasIaC = input.tech.includes("iac");
-    const hasSec = input.tech.includes("security");
-    const hasObs = input.tech.includes("observability");
-    const hasStream = input.tech.includes("streaming") || input.tech.includes("event_driven");
-    const isMicro = input.pattern === "microservices" || input.pattern === "event_driven" || input.pattern === "hybrid";
+    // Platform/SRE
+    const sre = clamp(0.4 + pri.platform*0.55 + (input.maturity==0?0.3:0) + (c.sTraffic>65?0.4:0), 0.5, 3.5);
+    roles.push(role("Platform / SRE", sre, "Operate / Improve", ["k8s", "IaC", "reliability", "incident response"]));
 
-    const pr = {};
-    const base = (x) => clamp(Math.round(x), 0, 3);
+    // DevSecOps / Security engineer
+    const sec = clamp(0.2 + pri.security*0.45 + (input.risk>=9?0.6:0), 0.25, 2.5);
+    roles.push(role("Security / DevSecOps", sec, "Secure / Assure", ["threat modeling", "SAST/DAST", "secrets", "compliance"]));
 
-    pr.plan = base(1 + (risk>=8?1:0) + (isMicro?1:0));
-    pr.code = base(1 + (risk>=7?1:0) + (hasSec?1:0));
-    pr.build = base(1 + (idx>=55?1:0) + (hasIaC?1:0));
-    pr.test = base(1 + (risk>=7?1:0) + (idx>=55?1:0));
-    pr.release = base(1 + (risk>=8?1:0) + (idx>=70?1:0));
-    pr.deploy = base(1 + (hasK8s||hasIaC?1:0) + (idx>=55?1:0));
-    pr.operate = base(1 + (rps>=200?1:0) + (compute>=8?1:0));
-    pr.monitor = base(1 + (hasObs?1:0) + (idx>=55?1:0));
-    pr.respond = base(1 + (risk>=8?1:0) + (idx>=70?1:0));
-    pr.govern = base(1 + (risk>=8?1:0) + (hasSec?1:0));
+    // QA / Test automation
+    const qa = clamp(0.3 + pri.qa*0.45, 0.3, 2.5);
+    roles.push(role("QA / Test Automation", qa, "Verify / Prevent", ["test strategy", "automation", "load tests"]));
 
-    return pr;
-  }
+    // Observability specialist (often in Platform/SRE; include only when needed)
+    const obs = clamp(pri.observability>=2 ? (0.25 + (pri.observability-1)*0.25) : 0, 0, 1.5);
+    if(obs>0) roles.push(role("Observability (shared)", obs, "Measure / Improve", ["OTel", "SLOs", "dashboards", "alerting"]));
 
-  function buildSkillsTable(pr){
-    const tbl = el("skillsTable");
-    tbl.innerHTML = "";
-
-    const thead = document.createElement("thead");
-    thead.innerHTML = `<tr>
-      <th>Area</th>
-      <th class="right">Priorità</th>
-      <th>Descrizione</th>
-      <th>Esempi concreti</th>
-    </tr>`;
-    tbl.appendChild(thead);
-
-    const tbody = document.createElement("tbody");
-    FACETS.forEach(f => {
-      const v = pr[f.id] ?? 0;
-      const examples = facetExamples(f.id);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><b>${f.label}</b></td>
-        <td class="right"><span class="pill"><b>${v}</b>/3</span></td>
-        <td class="muted">${f.desc}</td>
-        <td>${examples.map(x=>`<span class="tag">${x}</span>`).join(" ")}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-    tbl.appendChild(tbody);
-  }
-
-  function facetExamples(id){
-    const ex = {
-      plan:["threat model", "ADR", "SLO/SLA", "data classification"],
-      code:["secure coding", "code review", "lint/format", "branch policy"],
-      build:["CI templates", "SBOM", "artifact signing", "cache builds"],
-      test:["unit+integration", "e2e", "perf test", "DAST"],
-      release:["semver", "change approval", "policy-as-code", "release notes"],
-      deploy:["IaC", "progressive delivery", "rollback", "secrets mgmt"],
-      operate:["on-call", "capacity", "FinOps", "runbook"],
-      monitor:["metrics/logs/traces", "alerts", "dashboards", "synthetics"],
-      respond:["incident mgmt", "postmortem", "patching", "vuln triage"],
-      govern:["audit", "access control", "data retention", "compliance"]
-    };
-    return ex[id] || [];
-  }
-
-  // -----------------------------
-  // Rendering
-  // -----------------------------
-  function render(input, c, staff){
-    // KPIs
-    el("kComplexity").textContent = `${c.index}/100`;
-    el("barComplexity").style.width = `${c.index}%`;
-
-    el("kHeadcount").textContent = `${staff.headcount}`;
-    el("kHeadcountHint").textContent = `FTE pianificati: ${staff.fteSum} (alcuni ruoli possono essere part-time).`;
-
-    el("kSquads").textContent = `${staff.squads}`;
-    el("kSquadsHint").textContent = `Target: ~${staff.squadSize} persone per squad + team shared.`;
-
-    // Drivers
-    const drv = el("drivers");
-    drv.innerHTML = "";
-    const rows = [
-      { name:"Pattern", score: Math.round(PATTERN[input.pattern].factor*10)/10, why: PATTERN[input.pattern].note },
-      { name:"Traffic scale", score: Math.round(c.sTraffic*10)/10, why: `rps stimati: ${c.rps.toFixed(2)} · ${scaleLabel(c.rps)}` },
-      { name:"Compute load", score: Math.round(c.sCompute*10)/10, why: `Level ${input.compute}/10 · ${computeLabel(input.compute)}` },
-      { name:"Tech diversity", score: Math.round(c.sTech*10)/10, why: `${input.tech.length} categorie selezionate` },
-      { name:"Risk", score: Math.round(c.sRisk*10)/10, why: `Criticità ${input.risk}/10` },
-      { name:"Maturity", score: Math.round(MATURITY[input.maturity].factor*10)/10, why: MATURITY[input.maturity].note },
-    ];
-    rows.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${r.name}</td><td class="right"><span class="pill"><b>${r.score}</b></span></td><td class="muted">${escapeHtml(r.why)}</td>`;
-      drv.appendChild(tr);
-    });
-
-    // Structure
-    const structure = el("structure");
-    structure.innerHTML = `
-      <div class="pill" style="margin-bottom:8px;"><b>${PATTERN[input.pattern].label}</b> · DevSecOps maturity: <b>${MATURITY[input.maturity].label}</b> · Bias: <b>${BIAS[input.bias].label}</b></div>
-      <div style="display:flex; flex-wrap:wrap; gap:8px;">
-        <span class="tag">Feature Squads: ${staff.squads} × ~${staff.squadSize}</span>
-        <span class="tag">Platform/SRE shared</span>
-        <span class="tag">AppSec shared</span>
-        <span class="tag">QA automation</span>
-      </div>
-      <div style="margin-top:10px;" class="muted">
-        Technologies: ${input.tech.length ? input.tech.map(id => TECH.find(t=>t.id===id)?.label || id).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join(" ") : "<span class='tag'>—</span>"}
-      </div>
-    `;
-    el("structureNotes").textContent = staff.structureNotes;
-
-    // Roles
-    const rolesT = el("roles");
-    rolesT.innerHTML = "";
-    staff.roles.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><b>${escapeHtml(r.name)}</b></td>
-        <td class="right"><span class="pill"><b>${r.fte}</b></span></td>
-        <td class="muted">${escapeHtml(r.lifecycle)}</td>
-        <td>${r.skills.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join(" ")}</td>
-      `;
-      rolesT.appendChild(tr);
-    });
-
-    // Skills table
-    const pr = skillPriorities(input, c);
-    buildSkillsTable(pr);
-
-    // Scenario header
-    el("scenarioName").textContent = "Scenario";
-  }
-
-  function computeLabel(v){
-    const x = Number(v);
-    if(x<=3) return "light (CRUD, poca elaborazione)";
-    if(x<=6) return "medium (regole, integrazioni, batch moderati)";
-    if(x<=8) return "heavy (real-time, streaming, molte trasformazioni)";
-    return "very heavy (ML/batch intensivo, low-latency, ingestion elevato)";
-  }
-
-  function scaleLabel(rps){
-    if(rps<=1) return "low";
-    if(rps<=10) return "medium";
-    if(rps<=50) return "high (già rilevante)";
-    if(rps<=200) return "very high";
-    if(rps<=800) return "extreme";
-    return "hyperscale-ish";
-  }
-
-  function escapeHtml(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;");
-  }
-
-  
-  // -----------------------------
-  // Charts: cost + time-to-production
-  // -----------------------------
-  let currentState = null;
-
-  function fmtEuro(v){
-    try{
-      return "€ " + Math.round(v).toLocaleString("it-IT");
-    }catch{
-      return "€ " + Math.round(v);
-    }
-  }
-
-  function fmtWeeks(v){
-    const w = Math.max(0, v);
-    const r = Math.round(w*10)/10;
-    return `${r}w`;
-  }
-
-  function weeksToWorkdays(weeks, workDaysPerWeek){
-    const wd = Math.max(1, Number(workDaysPerWeek || 5));
-    return Math.max(0, Number(weeks || 0)) * wd;
-  }
-
-  function fmtWorkdays(days){
-    const d = Math.max(0, Number(days || 0));
-    // Round to nearest 0.5 day to avoid jitter, then show integer if close
-    const r = Math.round(d * 2) / 2;
-    const asInt = Math.abs(r - Math.round(r)) < 0.001 ? String(Math.round(r)) : String(r);
-    return `${asInt}wd`;
-  }
-
-  function ensureCanvasSize(canvas){
-    if(!canvas) return null;
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    const w = Math.max(10, Math.floor(rect.width));
-    const h = Math.max(10, Math.floor(rect.height));
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
-    return { ctx, w, h };
-  }
-
-  function drawLineChart(canvas, xs, series, opts){
-    const s = ensureCanvasSize(canvas);
-    if(!s) return;
-    const { ctx, w, h } = s;
-
-    const pad = { l:46, r:16, t:12, b:28 };
-    const cw = w - pad.l - pad.r;
-    const ch = h - pad.t - pad.b;
-
-    const allY = series.flatMap(ss => ss.ys);
-    const yMin = (opts?.yMin ?? Math.min(...allY));
-    const yMaxRaw = (opts?.yMax ?? Math.max(...allY));
-    const yMax = yMaxRaw === yMin ? yMin + 1 : yMaxRaw;
-
-    const xMin = Math.min(...xs);
-    const xMax = Math.max(...xs);
-
-    const xToPx = (x) => pad.l + ( (x - xMin) / (xMax - xMin) ) * cw;
-    const yToPx = (y) => pad.t + (1 - ( (y - yMin) / (yMax - yMin) )) * ch;
-
-    // bg
-    ctx.clearRect(0,0,w,h);
-
-    // grid
-    ctx.globalAlpha = 1;
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255,255,255,.10)";
-    ctx.fillStyle = "rgba(255,255,255,.70)";
-    ctx.font = "12px ui-sans-serif, system-ui";
-    ctx.textBaseline = "middle";
-
-    const ticks = 5;
-    for(let i=0;i<=ticks;i++){
-      const yy = pad.t + (i/ticks)*ch;
-      ctx.beginPath();
-      ctx.moveTo(pad.l, yy);
-      ctx.lineTo(pad.l+cw, yy);
-      ctx.stroke();
-    }
-    for(let i=0;i<=ticks;i++){
-      const xx = pad.l + (i/ticks)*cw;
-      ctx.beginPath();
-      ctx.moveTo(xx, pad.t);
-      ctx.lineTo(xx, pad.t+ch);
-      ctx.stroke();
+    // Normalize totals roughly to fteSum (do not strictly force; just show recommended coverage)
+    const sum = roles.reduce((a,r)=>a+r.fte,0);
+    const scale = sum > 0 ? (fteSum / sum) : 1;
+    const rolesScaled = roles.map(r => ({...r, fte: Math.round(r.fte*scale*2)/2 }));
+    // Fix rounding drift
+    let drift = Math.round((fteSum - rolesScaled.reduce((a,r)=>a+r.fte,0))*2)/2;
+    if(Math.abs(drift) >= 0.5){
+      rolesScaled[2].fte = Math.max(0, Math.round((rolesScaled[2].fte + drift)*2)/2); // adjust backend
     }
 
-    // axes labels
-    ctx.fillStyle = "rgba(233,237,245,.75)";
-    ctx.textAlign = "center";
-    ctx.fillText(opts?.xLabel || "FTE", pad.l + cw/2, h - 12);
+    const headcount = Math.max(2, Math.round(fteSum)); // rough
+    const structureNote = `Suggested: ${squads} feature squad(s) (~${squadSize} people/squad) + a small platform/security layer (shared roles).`;
 
-    // y ticks + labels
-    ctx.textAlign = "right";
-    for(let i=0;i<=ticks;i++){
-      const yv = yMin + ( (ticks-i)/ticks )*(yMax-yMin);
-      const yy = pad.t + (i/ticks)*ch;
-      const label = opts?.yFmt ? opts.yFmt(yv) : String(Math.round(yv));
-      ctx.fillText(label, pad.l - 8, yy);
-    }
-
-    // draw series
-    series.forEach(ss => {
-      ctx.save();
-      ctx.strokeStyle = ss.color || "rgba(122,162,255,.9)";
-      ctx.lineWidth = 2;
-      if(ss.dash) ctx.setLineDash(ss.dash);
-      ctx.beginPath();
-      xs.forEach((x, i) => {
-        const px = xToPx(x);
-        const py = yToPx(ss.ys[i]);
-        if(i===0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      ctx.stroke();
-      ctx.restore();
-    });
-
-    // markers (vertical lines)
-    if(opts?.vLines){
-      opts.vLines.forEach(vl => {
-        const x = vl.x;
-        if(x < xMin || x > xMax) return;
-        const px = xToPx(x);
-        ctx.save();
-        ctx.strokeStyle = vl.color || "rgba(125,255,205,.8)";
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash(vl.dash || []);
-        ctx.beginPath();
-        ctx.moveTo(px, pad.t);
-        ctx.lineTo(px, pad.t+ch);
-        ctx.stroke();
-
-        // label
-        ctx.fillStyle = vl.color || "rgba(125,255,205,.9)";
-        ctx.font = "12px ui-sans-serif, system-ui";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.fillText(vl.label || "", Math.min(px+6, w-120), pad.t+2);
-        ctx.restore();
-      });
-    }
+    return { headcount, fteSum, squads, squadSize, roles: rolesScaled, structureNote, pri };
   }
 
-  function staffingRange(recFte){
-    const min = Math.max(1, Math.round(recFte * 0.5 * 2)/2);
-    const max = Math.max(min+1, Math.round(recFte * 1.8 * 2)/2);
-    const xs = [];
-    for(let x=min; x<=max+1e-9; x+=0.5) xs.push(Math.round(x*2)/2);
-    return xs;
+  // -----------------------------
+  // Charts
+  function money(n){
+    const num = Number(n);
+    if(!Number.isFinite(num)) return "€—";
+    const v = Math.round(num);
+    return "€" + v.toLocaleString("en-US");
   }
 
-  function costModelForFte(fte, recFte, costFteYear, months, input, c, riskMultiplier){
-    const horizon = Math.max(1, Number(months || 12));
-    const costPerFte = Math.max(0, Number(costFteYear || 0));
-    const salaryCost = fte * costPerFte * (horizon / 12);
+  function costModelForFte(fte, recFte, costFteYear, horizonMonths, input, c, riskMultiplier){
+    const months = Math.max(1, Number(horizonMonths||12));
+    const salaryCost = Math.max(0, fte) * Math.max(0, costFteYear) * (months/12);
 
-    const under = Math.max(0, (recFte - fte) / Math.max(0.1, recFte));
-    const over  = Math.max(0, (fte - recFte) / Math.max(0.1, recFte));
+    // Understaffing penalty scales with shortfall, risk, and complexity
+    const shortfall = clamp((recFte - fte) / Math.max(0.5, recFte), 0, 1.5);
+    const risk = (input.risk/10);
+    const comp = (c.index/100);
+    const basePenalty = salaryCost * (0.35 + 0.55*risk + 0.35*comp); // baseline multiplier
+    const underPenalty = shortfall>0 ? basePenalty * shortfall * Math.max(0.5, riskMultiplier) : 0;
 
-    const baseline = recFte * costPerFte * (horizon/12);
-
-    // Understaffing penalty grows fast with risk + complexity + compute.
-    const risk = Number(input.risk || 1) / 10;
-    const compute = Number(input.compute || 1) / 10;
-    const idx = (c.index || 50) / 100;
-
-    const underPenalty = baseline
-      * Math.pow(under, 2.2)
-      * (0.7 + 1.1*risk)
-      * (0.6 + 0.8*idx + 0.4*compute)
-      * Math.max(0.5, Number(riskMultiplier || 1));
-
-    // Overstaffing waste: coordination/inefficiency + opportunity cost
-    const overWaste = baseline
-      * Math.pow(over, 1.6)
-      * (0.35 + 0.75*(idx))
-      * 0.9;
+    // Overstaffing waste grows with surplus and coordination inefficiency
+    const surplus = clamp((fte - recFte) / Math.max(0.5, recFte), 0, 2.0);
+    const ineff = 0.12 + 0.10*(1 - MATURITY[input.maturity].factor) + 0.08*(input.pattern==="microservices" ? 1:0) + 0.06*comp;
+    const overWaste = surplus>0 ? salaryCost * surplus * ineff : 0;
 
     const total = salaryCost + underPenalty + overWaste;
     return { salaryCost, underPenalty, overWaste, total };
   }
 
-  function timeModelWeeks(fte, recFte, input, c, scopeMultiplier, handoffTax){
-    const n = Math.max(0.5, Number(fte || 1));
-    const idx = (c.index || 50) / 100;
-    const techCount = (input.tech || []).length;
-    const compute = Number(input.compute || 1);
-    const risk = Number(input.risk || 1);
-
-    // base "work" in weeks (rough): complexity + tech surface + compute + risk gates
-    const patternFactor = PATTERN[input.pattern]?.factor || 1;
-    const maturityFactor = MATURITY[input.maturity]?.factor || 1;
-
-    const baseWeeks =
-      (4 + idx*18) +            // complexity
-      (techCount*0.6) +         // surface area
-      (compute*0.9) +           // compute/algorithms
-      (risk >= 8 ? 2.5 : 0) +   // governance gates
-      ((patternFactor-1) * 6);  // distributed overhead
-
-    const scope = Math.max(0.5, Number(scopeMultiplier || 1));
-    const work = baseWeeks * scope;
-
-    // velocity model: increasing returns then coordination tax
-    // handoffTax in [0..1] augments coordination. pattern also affects.
-    const coordBaseByPattern = {
-      monolith: 0.06, modular_monolith: 0.08, microservices: 0.12, event_driven: 0.14, serverless: 0.10, hybrid: 0.16
-    };
-    const coordBase = coordBaseByPattern[input.pattern] ?? 0.10;
-    const coord = coordBase * (0.6 + 1.0*Number(handoffTax || 0.35)) * (maturityFactor); // maturityFactor <1 reduces coord
-
-    const alpha = 0.92; // diminishing returns
-    const velocity = Math.pow(n, alpha) / (1 + coord * (n-1) * (0.8 + idx));
-    const weeks = work / Math.max(0.25, velocity);
-
-    // Avoid unrealistic optimism
-    return clamp(weeks, 1.5, 120);
+  function effectiveTeamThroughput(fte, handoffTax){
+    // Throughput grows with team size but is reduced by coordination tax.
+    const x = Math.max(0.5, fte);
+    const tax = clamp(Number(handoffTax||0), 0, 1);
+    // effective = x / (1 + tax*(x-1))  -> approaches 1/tax for large x
+    return x / (1 + tax*(x-1));
   }
 
-  function updateCharts(state){
+  function timeModelWeeks(fte, recFte, input, c, scopeMultiplier, handoffTax){
+    // Base effort (in weeks) depends on complexity and architecture
+    const base = 6 + (c.index/100)*18; // 6..24
+    const patternOverhead = PATTERN[input.pattern].factor; // 1..1.65
+    const scope = Math.max(0.5, Number(scopeMultiplier||1));
+
+    // throughput baseline around recFte
+    const eff = effectiveTeamThroughput(fte, handoffTax);
+    const effNorm = effectiveTeamThroughput(recFte, handoffTax);
+
+    const rel = eff / Math.max(0.4, effNorm); // relative to recommended point
+    const weeks = (base * patternOverhead * scope) / Math.max(0.35, rel);
+
+    // Avoid unrealistic ultra-low times
+    return Math.max(2, weeks);
+  }
+
+  function weeksToWorkdays(weeks, wdPerWeek){
+    const wd = Math.max(1, Number(wdPerWeek||5));
+    return Math.max(0, Number(weeks||0)) * wd;
+  }
+
+  function fmtWorkdays(days){
+    const d = Math.max(0, Number(days||0));
+    const r = Math.round(d*2)/2;
+    const asInt = Math.abs(r - Math.round(r)) < 0.001 ? String(Math.round(r)) : String(r);
+    return `${asInt}wd`;
+  }
+
+  function drawLineChart(canvas, xs, series, opts){
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+
+    const padL = 46, padR = 18, padT = 14, padB = 30;
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+
+    const allY = series.flatMap(s => s.ys);
+    const minY = Math.min(...allY);
+    const maxY = Math.max(...allY);
+    const y0 = minY;
+    const y1 = maxY + (maxY-minY)*0.08;
+
+    const x0 = Math.min(...xs);
+    const x1 = Math.max(...xs);
+
+    const xMap = (x) => padL + ( (x - x0) / Math.max(0.0001, (x1-x0)) ) * innerW;
+    const yMap = (y) => padT + innerH - ( (y - y0) / Math.max(0.0001, (y1-y0)) ) * innerH;
+
+    // clear
+    ctx.clearRect(0,0,W,H);
+
+    // grid
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.lineWidth = 1;
+    for(let i=0;i<=4;i++){
+      const yy = padT + (innerH/4)*i;
+      ctx.beginPath();
+      ctx.moveTo(padL, yy);
+      ctx.lineTo(W-padR, yy);
+      ctx.stroke();
+    }
+
+    // y labels
+    ctx.fillStyle = "rgba(169,180,207,.85)";
+    ctx.font = "12px ui-sans-serif, system-ui";
+    for(let i=0;i<=4;i++){
+      const yy = padT + (innerH/4)*i;
+      const yVal = y1 - ( (y1-y0)/4 )*i;
+      ctx.fillText(opts.yFmt ? opts.yFmt(yVal) : String(Math.round(yVal)), 6, yy+4);
+    }
+
+    // x labels
+    ctx.fillText(opts.xLabel || "X", W/2-8, H-8);
+
+    // series
+    series.forEach(s => {
+      ctx.strokeStyle = s.color || "rgba(125,255,205,.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      s.ys.forEach((y, i) => {
+        const xx = xMap(xs[i]);
+        const yy = yMap(y);
+        if(i===0) ctx.moveTo(xx, yy);
+        else ctx.lineTo(xx, yy);
+      });
+      ctx.stroke();
+    });
+
+    // vLines
+    if(opts.vLines){
+      opts.vLines.forEach(vl => {
+        const xx = xMap(vl.x);
+        ctx.save();
+        ctx.strokeStyle = vl.color || "rgba(255,255,255,.25)";
+        ctx.setLineDash(vl.dash || []);
+        ctx.beginPath();
+        ctx.moveTo(xx, padT);
+        ctx.lineTo(xx, H-padB);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = vl.color || "rgba(255,255,255,.65)";
+        ctx.fillText(vl.label || "", Math.min(W-90, xx+6), padT+12);
+        ctx.restore();
+      });
+    }
+
+    // Legend
+    ctx.save();
+    let lx = padL, ly = padT+2;
+    series.forEach(s => {
+      ctx.fillStyle = s.color || "rgba(125,255,205,.9)";
+      ctx.fillRect(lx, ly, 10, 3);
+      ctx.fillStyle = "rgba(233,237,245,.9)";
+      ctx.fillText(s.name, lx+14, ly+5);
+      lx += 120;
+    });
+    ctx.restore();
+  }
+
+  // -----------------------------
+  // Rendering
+  let currentState = null;
+
+  function render(input, c, staff){
+    // KPIs
+    el("kComplexity").textContent = `${c.index}/100`;
+    el("kComplexityHint").textContent = `Raw=${c.raw.toFixed(1)} · factor=${c.fact.toFixed(2)} · ${scaleLabel(c.rps)}`;
+    el("kHeadcount").textContent = `${staff.headcount}`;
+    el("kHeadcountHint").textContent = `Planned FTE: ${staff.fteSum}`;
+    el("kSquads").textContent = `${staff.squads}`;
+    el("kSquadsHint").textContent = `Target: ~${staff.squadSize} people/squad`;
+
+    // Key driver (pick max contribution)
+    const comps = [
+      { name:"Traffic", score: c.sTraffic, why: `rps: ${c.rps.toFixed(2)} · ${scaleLabel(c.rps)}` },
+      { name:"Compute", score: c.sCompute, why: computeLabel(input.compute) },
+      { name:"Tech diversity", score: c.sTech, why: `${input.tech.length} categories` },
+      { name:"Risk", score: c.sRisk, why: `Criticality ${input.risk}/10` },
+      { name:"Maturity", score: MATURITY[input.maturity].factor*100, why: MATURITY[input.maturity].note },
+      { name:"Pattern", score: PATTERN[input.pattern].factor*100, why: PATTERN[input.pattern].note },
+    ].sort((a,b)=>b.score-a.score)[0];
+
+    el("kDriver").textContent = comps.name;
+    el("kDriverHint").textContent = comps.why;
+
+    el("structureNote").textContent = staff.structureNote;
+
+    // Drivers table
+    const dBody = el("driversTbl").querySelector("tbody");
+    dBody.innerHTML = "";
+    const rows = [
+      { name:"Pattern", score: PATTERN[input.pattern].factor.toFixed(2), why: PATTERN[input.pattern].note },
+      { name:"Maturity", score: MATURITY[input.maturity].factor.toFixed(2), why: MATURITY[input.maturity].note },
+      { name:"Traffic", score: Math.round(c.sTraffic*10)/10, why: `rps: ${c.rps.toFixed(2)} · ${scaleLabel(c.rps)}` },
+      { name:"Compute", score: Math.round(c.sCompute*10)/10, why: computeLabel(input.compute) },
+      { name:"Tech diversity", score: Math.round(c.sTech*10)/10, why: `${input.tech.length} categories` },
+      { name:"Risk", score: Math.round(c.sRisk*10)/10, why: `Criticality ${input.risk}/10` },
+    ];
+    rows.forEach(r=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.name}</td><td class="right">${r.score}</td><td>${r.why}</td>`;
+      dBody.appendChild(tr);
+    });
+
+    // Roles table
+    const rBody = el("rolesTbl").querySelector("tbody");
+    rBody.innerHTML = "";
+    staff.roles.forEach(r=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><b>${r.name}</b></td><td class="right">${r.fte}</td><td>${r.lifecycle}</td><td>${r.skills.map(s=>`<span class="tag">${s}</span>`).join(" ")}</td>`;
+      rBody.appendChild(tr);
+    });
+    el("rolesHint").textContent = "Tip: for small teams, prioritize T-shaped profiles. Specialized roles can be part-time/shared.";
+
+    // Skills matrix
+    const sBody = el("skillsTbl").querySelector("tbody");
+    sBody.innerHTML = "";
+    FACETS.forEach(f=>{
+      const v = staff.pri[f.id] ?? 0;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><b>${f.label}</b></td><td class="right">${v}/3</td><td>${f.desc}</td><td>${facetExamples(f.id).map(x=>`<span class="tag">${x}</span>`).join(" ")}</td>`;
+      sBody.appendChild(tr);
+    });
+
+    // Seed chart comparisons
+    el("fteActual").value = staff.fteSum;
+    currentState = { input, c, staff, ts: Date.now() };
+    try{ localStorage.setItem("devsecops_team_sizer:last", JSON.stringify(currentState)); }catch(e){}
+    updateCharts();
+  }
+
+  function updateCharts(){
+    const state = currentState || (()=>{ try{ return JSON.parse(localStorage.getItem("devsecops_team_sizer:last")||"null"); }catch(e){ return null; } })();
     if(!state) return;
     const { input, c, staff } = state;
 
     const recFte = Math.max(0.5, Number(staff.fteSum || staff.headcount || 1));
     const recFteRounded = Math.round(recFte*2)/2;
 
-    // Pills
-    const recPill = document.getElementById("recFtePill");
-    if(recPill) recPill.textContent = `Recommended ≈ ${recFteRounded} FTE`;
+    const fteActual = Math.max(0.5, parseLocaleNumber(el("fteActual").value, recFte));
+    const costFteYear = Math.max(0, parseLocaleNumber(el("costFteYear").value, 90000));
+    const horizonMonths = Math.max(1, parseLocaleNumber(el("horizonMonths").value, 12));
+    const riskMultiplier = Math.max(0.5, parseLocaleNumber(el("riskMultiplier").value, 1.2));
 
-    // Read chart controls
-    const fteActualEl = document.getElementById("fteActual");
-    const costFteEl = document.getElementById("costFteYear");
-    const horizonEl = document.getElementById("horizonMonths");
-    const riskMultEl = document.getElementById("riskMultiplier");
-    const scopeEl = document.getElementById("scopeMultiplier");
-    const handoffEl = document.getElementById("handoffTax");
+    const scopeMultiplier = Math.max(0.5, parseLocaleNumber(el("scopeMultiplier").value, 1.0));
+    const tax = clamp(parseLocaleNumber(el("handoffTax").value, 0.35), 0, 1);
+    const wdPerWeek = Math.max(1, parseLocaleNumber(el("workDaysPerWeek").value, 5));
 
-    if(riskMultEl) document.getElementById("riskMultiplierLabel").textContent = Number(riskMultEl.value).toFixed(1);
-    if(scopeEl) document.getElementById("scopeMultiplierLabel").textContent = Number(scopeEl.value).toFixed(1);
-    if(handoffEl) document.getElementById("handoffTaxLabel").textContent = Number(handoffEl.value).toFixed(2);
+    // X range around recommendation
+    const minF = Math.max(0.5, Math.floor(recFte*0.5));
+    const maxF = Math.min(30, Math.ceil(recFte*1.8 + 2));
+    const xs = [];
+    for(let x=minF; x<=maxF; x+=0.5) xs.push(Math.round(x*2)/2);
 
-    // default actual if empty/0
-    if(fteActualEl){
-      const cur = Number(fteActualEl.value || 0);
-      if(!cur){
-        fteActualEl.value = String(recFteRounded);
-      }
-    }
-
-    const fteActual = Math.max(0.5, Number(fteActualEl?.value || recFteRounded));
-    const costFteYear = Math.max(0, Number(costFteEl?.value || 0));
-    const months = Math.max(1, Number(horizonEl?.value || 12));
-    const riskMultiplier = Math.max(0.5, Number(riskMultEl?.value || 1.2));
-    const scopeMultiplier = Math.max(0.5, Number(scopeEl?.value || 1.0));
-    const handoffTax = clamp(Number(handoffEl?.value || 0.35), 0, 1);
-    const workDaysPerWeek = Math.max(1, Number(document.getElementById("workDaysPerWeek")?.value || 5));
-
-    // COST CHART
-    const xs = staffingRange(recFte);
-    const total = [];
-    const salaryOnly = [];
-    for(const x of xs){
-      const m = costModelForFte(x, recFte, costFteYear, months, input, c, riskMultiplier);
-      total.push(m.total);
-      salaryOnly.push(m.salaryCost);
-    }
-    const mRec = costModelForFte(recFte, recFte, costFteYear, months, input, c, riskMultiplier);
-    const mAct = costModelForFte(fteActual, recFte, costFteYear, months, input, c, riskMultiplier);
-
-    const delta = mAct.total - mRec.total;
-    const costSummary = document.getElementById("costSummary");
-    if(costSummary){
-      const sign = delta >= 0 ? "+" : "−";
-      costSummary.textContent =
-        `Recommended (${recFteRounded} FTE): ${fmtEuro(mRec.total)} · Actual (${Math.round(fteActual*2)/2} FTE): ${fmtEuro(mAct.total)} · Δ ${sign}${fmtEuro(Math.abs(delta))} su ${months} mesi (stima).`;
-    }
+    // COST series
+    const salaryYs = xs.map(x => costModelForFte(x, recFte, costFteYear, horizonMonths, input, c, riskMultiplier).salaryCost);
+    const totalYs  = xs.map(x => costModelForFte(x, recFte, costFteYear, horizonMonths, input, c, riskMultiplier).total);
 
     drawLineChart(
-      document.getElementById("costChart"),
+      el("costChart"),
       xs,
       [
-        { name:"Total", ys: total, color:"rgba(122,162,255,.95)" },
-        { name:"Salary", ys: salaryOnly, color:"rgba(255,255,255,.55)", dash:[6,4] }
+        { name:"Salary", ys: salaryYs, color:"rgba(255,206,122,.85)" },
+        { name:"Total",  ys: totalYs,  color:"rgba(125,255,205,.9)" },
       ],
       {
         xLabel: "FTE",
-        yFmt: (y) => {
-          // compact label for axis
-          const v = Math.round(y);
-          if(v >= 1_000_000) return "€" + Math.round(v/1_000_000) + "M";
-          if(v >= 1000) return "€" + Math.round(v/1000) + "k";
-          return "€" + v;
-        },
+        yFmt: (y) => money(y),
         vLines: [
           { x: recFteRounded, label:"recommended", color:"rgba(125,255,205,.8)" },
-          { x: Math.round(fteActual*2)/2, label:"actual", color:"rgba(255,206,122,.85)", dash:[4,4] }
+          { x: Math.round(fteActual*2)/2, label:"actual", color:"rgba(255,122,144,.85)", dash:[4,4] }
         ]
       }
     );
 
-    // TIME CHART (working days)
-    const wdSeries = xs.map(x => weeksToWorkdays(timeModelWeeks(x, recFte, input, c, scopeMultiplier, handoffTax), workDaysPerWeek));
-    const wRecWeeks = timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, handoffTax);
-    const wActWeeks = timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, handoffTax);
-    const wdRec = weeksToWorkdays(wRecWeeks, workDaysPerWeek);
-    const wdAct = weeksToWorkdays(wActWeeks, workDaysPerWeek);
+    const costRec = costModelForFte(recFte, recFte, costFteYear, horizonMonths, input, c, riskMultiplier);
+    const costAct = costModelForFte(fteActual, recFte, costFteYear, horizonMonths, input, c, riskMultiplier);
+    const delta = costAct.total - costRec.total;
+    el("costHintPill").textContent = `Δ ${delta>=0?"+":"-"}${money(Math.abs(delta))}`;
+    el("costSummary").textContent =
+      `Estimated total cost over ${horizonMonths} months: recommended ≈ ${money(costRec.total)} · actual ≈ ${money(costAct.total)} (salary ${money(costAct.salaryCost)}, under-penalty ${money(costAct.underPenalty)}, waste ${money(costAct.overWaste)}).`;
 
-    const timeSummary = document.getElementById("timeSummary");
-    const timeHint = document.getElementById("timeHintPill");
-    if(timeHint) timeHint.textContent = `Recommended ≈ ${fmtWorkdays(wdRec)} (${workDaysPerWeek}wd/week)`;
-    if(timeSummary){
-      timeSummary.textContent = `Estimated time time-to-production: recommended ≈ ${fmtWorkdays(wdRec)} · actual ≈ ${fmtWorkdays(wdAct)} (${workDaysPerWeek}wd/week, scope ${scopeMultiplier.toFixed(1)}×, handoff ${handoffTax.toFixed(2)}).`;
-    }
+    // TIME series (working days)
+    const wdSeries = xs.map(x => weeksToWorkdays(timeModelWeeks(x, recFte, input, c, scopeMultiplier, tax), wdPerWeek));
+    const wdRec = weeksToWorkdays(timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, tax), wdPerWeek);
+    const wdAct = weeksToWorkdays(timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, tax), wdPerWeek);
 
     drawLineChart(
-      document.getElementById("timeChart"),
+      el("timeChart"),
       xs,
-      [{ name:"Workdays", ys: wdSeries, color:"rgba(125,255,205,.9)" }],
+      [{ name:"Working days", ys: wdSeries, color:"rgba(125,255,205,.9)" }],
       {
         xLabel: "FTE",
         yFmt: (y) => Math.round(y) + "wd",
@@ -1400,254 +1137,142 @@
         ]
       }
     );
+
+    el("timeSummary").textContent =
+      `Estimated time-to-production: recommended ≈ ${fmtWorkdays(wdRec)} · actual ≈ ${fmtWorkdays(wdAct)} (${wdPerWeek} wd/week, scope ${scopeMultiplier.toFixed(1)}×, handoff tax ${tax.toFixed(2)}).`;
   }
 
-  
-function wireChartInputss(){
-    const ids = ["fteActual","costFteYear","horizonMonths","riskMultiplier","scopeMultiplier","handoffTax","workDaysPerWeek"];
-    ids.forEach(id => {
-      const e = document.getElementById(id);
-      if(!e) return;
-
-      const onAny = () => {
-        if(!currentState){
-          const last = localStorage.getItem("devsecops_team_sizer:last");
-          if(last){
-            try{ currentState = JSON.parse(last); }catch{}
-          }
-        }
-        updateCharts(currentState);
-      };
-
-      e.addEventListener("input", onAny);
-      e.addEventListener("change", onAny); // needed for <select>
-    });
-  }
-
-
-  // Inputs reading + persistence
-  // -----------------------------
-  function readInputs(){
-    const tech = Array.from(techChips.querySelectorAll("input[type=checkbox]"))
-      .filter(x => x.checked)
-      .map(x => x.value);
-
-    return {
+  function readInput(){
+    const input = {
       pattern: el("pattern").value,
-      maturity: el("maturity").value,
-      tech,
-      traffic: Number(el("traffic").value || 0),
+      maturity: Number(el("maturity").value),
+      tech: Array.from(selectedTech),
+      traffic: parseLocaleNumber(el("traffic").value, 0),
       trafficUnit: el("trafficUnit").value,
-      compute: Number(el("compute").value || 1),
-      risk: Number(el("risk").value || 1),
-      bias: el("bias").value
+      compute: parseLocaleNumber(el("compute").value, 5),
+      risk: parseLocaleNumber(el("risk").value, 7),
+      bias: el("bias").value,
     };
+    return input;
   }
 
-  function setInputs(input){
-    el("pattern").value = input.pattern ?? "modular_monolith";
-    el("maturity").value = String(input.maturity ?? "1");
-    el("traffic").value = input.traffic ?? 50;
-    el("trafficUnit").value = input.trafficUnit ?? "rps";
-    el("compute").value = input.compute ?? 5;
-    el("risk").value = input.risk ?? 7;
-    el("bias").value = input.bias ?? "balanced";
-
-    Array.from(techChips.querySelectorAll("input[type=checkbox]")).forEach(cb => {
-      cb.checked = (input.tech || []).includes(cb.value);
-    });
-
-    updateRanges();
-  }
-
-  function reset(){
-    setInputs({
-      pattern:"modular_monolith",
-      maturity:"1",
-      tech:["web_frontend","backend_api","db_sql","ci_cd","observability","iac","k8s"],
-      traffic:50,
-      trafficUnit:"rps",
-      compute:5,
-      risk:7,
-      bias:"balanced"
-    });
-    el("scenarioId").textContent = scenarioId();
-  }
   function calculate(){
-    const input = readInputs();
+    const input = readInput();
     const c = complexityIndex(input);
     const staff = recommendStaff(input, c);
     render(input, c, staff);
-
-    currentState = { input, c, staff, ts: Date.now() };
-    window.__LAST_STATE = currentState;
-    updateCharts(currentState);
-
-    // persist last (may fail in some contexts, e.g. file:// with strict privacy settings)
-    try { localStorage.setItem("devsecops_team_sizer:last", JSON.stringify(currentState)); } catch (e) {}
-    return currentState;
-  }
-
-  function saveScenario(){
-    const state = calculate();
-    const scenarios = JSON.parse(localStorage.getItem("devsecops_team_sizer:scenarios") || "[]");
-    scenarios.unshift({ id: el("scenarioId").textContent, ...state, ts: Date.now() });
-    localStorage.setItem("devsecops_team_sizer:scenarios", JSON.stringify(scenarios.slice(0, 20)));
-  }
-
-  function randomExample(){
-    const patterns = Object.keys(PATTERN);
-    const units = ["rps","rpm","dau","msgps"];
-    const p = patterns[Math.floor(Math.random()*patterns.length)];
-    const tech = TECH.filter(()=>Math.random()>.55).map(t=>t.id);
-    if(tech.length<3) tech.push("backend_api","db_sql","ci_cd");
-    const ex = {
-      pattern: p,
-      maturity: String([0,1,2][Math.floor(Math.random()*3)]),
-      tech,
-      traffic: [5,20,50,150,600,2000][Math.floor(Math.random()*6)],
-      trafficUnit: units[Math.floor(Math.random()*units.length)],
-      compute: [2,4,5,7,9][Math.floor(Math.random()*5)],
-      risk: [4,6,7,8,9,10][Math.floor(Math.random()*6)],
-      bias: ["lean","balanced","conservative"][Math.floor(Math.random()*3)]
-    };
-    setInputs(ex);
-    el("scenarioId").textContent = scenarioId();
-    calculate();
+    return { input, c, staff, ts: Date.now() };
   }
 
   // -----------------------------
-  // Export
-  // -----------------------------
-  
-function buildMarkdownReport(state){
+  // Markdown report
+  function mdEsc(s){ return String(s??"").replaceAll("|","\\|"); }
+
+  function buildMarkdownReport(state){
     const { input, c, staff } = state;
-    const techNames = (input.tech || []).map(id => TECH.find(t=>t.id===id)?.label || id);
+    const techNames = (input.tech||[]).map(id => TECH.find(t=>t.id===id)?.label || id);
 
-    // Snapshot chart inputs from DOM (so report matches what you see on screen)
-    const snapNum = (id, d=0) => {
-      const el = document.getElementById(id);
-      const v = el ? Number(el.value) : d;
-      return Number.isFinite(v) ? v : d;
-    };
-    const fteActual = Math.max(0.5, snapNum("fteActual", staff?.fteSum || staff?.headcount || 1));
-    const costFteYear = Math.max(0, snapNum("costFteYear", 0));
-    const horizonMonths = Math.max(1, snapNum("horizonMonths", 12));
-    const riskMultiplier = Math.max(0.5, snapNum("riskMultiplier", 1.2));
-    const scopeMultiplier = Math.max(0.5, snapNum("scopeMultiplier", 1.0));
-    const handoffTax = clamp(snapNum("handoffTax", 0.35), 0, 1);
-    const workDaysPerWeek = Math.max(1, snapNum("workDaysPerWeek", 5));
+    // snapshot chart params
+    const fteActual = Math.max(0.5, parseLocaleNumber(el("fteActual")?.value, staff.fteSum || 1));
+    const costFteYear = Math.max(0, parseLocaleNumber(el("costFteYear")?.value, 90000));
+    const horizonMonths = Math.max(1, parseLocaleNumber(el("horizonMonths")?.value, 12));
+    const riskMultiplier = Math.max(0.5, parseLocaleNumber(el("riskMultiplier")?.value, 1.2));
+    const scopeMultiplier = Math.max(0.5, parseLocaleNumber(el("scopeMultiplier")?.value, 1.0));
+    const tax = clamp(parseLocaleNumber(el("handoffTax")?.value, 0.35), 0, 1);
+    const wdPerWeek = Math.max(1, parseLocaleNumber(el("workDaysPerWeek")?.value, 5));
 
-    const recFte = Math.max(0.5, Number(staff.fteSum || staff.headcount || 1));
-    const recFteRounded = Math.round(recFte*2)/2;
-    const actFteRounded = Math.round(fteActual*2)/2;
-
+    const recFte = Math.max(0.5, Number(staff.fteSum || 1));
     const costRec = costModelForFte(recFte, recFte, costFteYear, horizonMonths, input, c, riskMultiplier);
     const costAct = costModelForFte(fteActual, recFte, costFteYear, horizonMonths, input, c, riskMultiplier);
     const costDelta = costAct.total - costRec.total;
 
-    const wRecWeeks = timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, handoffTax);
-    const wActWeeks = timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, handoffTax);
-    const wdRec = weeksToWorkdays(wRecWeeks, workDaysPerWeek);
-    const wdAct = weeksToWorkdays(wActWeeks, workDaysPerWeek);
+    const wdRec = weeksToWorkdays(timeModelWeeks(recFte, recFte, input, c, scopeMultiplier, tax), wdPerWeek);
+    const wdAct = weeksToWorkdays(timeModelWeeks(fteActual, recFte, input, c, scopeMultiplier, tax), wdPerWeek);
     const wdDelta = wdAct - wdRec;
-
-    const pr = skillPriorities(input, c);
-
-    const mdEsc = (s) => String(s ?? "").replaceAll("|", "\\|");
-    const money = (n) => {
-      const v = Math.round(Number(n||0));
-      return "€" + v.toLocaleString("it-IT");
-    };
 
     const lines = [];
     lines.push(`# DevSecOps Team Sizer — Report`);
-    lines.push(`_Generated: ${new Date().toLocaleString("it-IT")}_`);
+    lines.push(`_Generated: ${new Date().toLocaleString("en-GB")}_`);
     lines.push("");
-    lines.push(`## Inputss`);
+    lines.push(`## Inputs`);
     lines.push(`- Pattern: **${PATTERN[input.pattern].label}** (factor ${PATTERN[input.pattern].factor})`);
-    lines.push(`- Maturity DevSecOps: **${MATURITY[input.maturity].label}** (factor ${MATURITY[input.maturity].factor})`);
-    lines.push(`- Bias staffing: **${BIAS[input.bias].label}** (×${BIAS[input.bias].hc})`);
-    lines.push(`- Traffico stimato: **${c.rps.toFixed(2)} req/sec** (${input.traffic} ${input.trafficUnit})`);
+    lines.push(`- DevSecOps maturity: **${MATURITY[input.maturity].label}** (factor ${MATURITY[input.maturity].factor})`);
+    lines.push(`- Staffing bias: **${BIAS[input.bias].label}** (×${BIAS[input.bias].hc})`);
+    lines.push(`- Estimated traffic: **${c.rps.toFixed(2)} req/sec** (${input.traffic} ${input.trafficUnit})`);
     lines.push(`- Compute load: **${input.compute}/10** (${computeLabel(input.compute)})`);
     lines.push(`- Risk: **${input.risk}/10**`);
-    lines.push(`- Technologies: ${techNames.length ? techNames.map(t => '`' + t + '`').join(", ") : "_n/a_"}`);
+    lines.push(`- Technologies: ${techNames.length ? techNames.map(t => "\u0060"+t+"\u0060").join(", ") : "_n/a_"}`);
     lines.push("");
 
-    lines.push(`## Outputs sintetico`);
-    lines.push(`- Complexity index: **${c.index}/100**`);
-    lines.push(`- Suwdested headcount: **${staff.headcount}** (FTE pianificati: ${staff.fteSum})`);
-    lines.push(`- Feature squads: **${staff.squads}** (~${staff.squadSize} persone/squad)`);
+    lines.push(`## Summary output`);
+    lines.push(`- Complexity index: **${c.index}/100** (raw ${c.raw.toFixed(1)} · factor ${c.fact.toFixed(2)})`);
+    lines.push(`- Suggested headcount: **${staff.headcount}** (planned FTE: ${staff.fteSum})`);
+    lines.push(`- Feature squads: **${staff.squads}** (~${staff.squadSize} people/squad)`);
+    lines.push(`- Structure: ${staff.structureNote}`);
     lines.push("");
 
     lines.push(`## Driver scores (calculation breakdown)`);
-    lines.push(`| Factor | Valore | Notes |`);
+    lines.push(`| Factor | Value | Note |`);
     lines.push(`|---|---:|---|`);
     lines.push(`| Pattern factor | ${PATTERN[input.pattern].factor} | ${mdEsc(PATTERN[input.pattern].note)} |`);
     lines.push(`| Maturity factor | ${MATURITY[input.maturity].factor} | ${mdEsc(MATURITY[input.maturity].note)} |`);
-    lines.push(`| Traffico (rps) | ${c.rps.toFixed(2)} | Score traffico: ${c.sTraffic.toFixed(1)} · ${scaleLabel(c.rps)} |`);
-    lines.push(`| Compute | ${input.compute}/10 | Score compute: ${c.sCompute.toFixed(1)} · ${mdEsc(computeLabel(input.compute))} |`);
-    lines.push(`| Tech diversity | ${input.tech.length} | Score tech: ${c.sTech.toFixed(1)} |`);
-    lines.push(`| Risk | ${input.risk}/10 | Score rischio: ${c.sRisk.toFixed(1)} |`);
-    lines.push(`| Indice finale | ${c.index}/100 | Raw=${c.raw.toFixed(1)} · factor=${c.fact.toFixed(2)} |`);
+    lines.push(`| Traffic (rps) | ${c.rps.toFixed(2)} | score ${c.sTraffic.toFixed(1)} · ${scaleLabel(c.rps)} |`);
+    lines.push(`| Compute | ${input.compute}/10 | score ${c.sCompute.toFixed(1)} · ${mdEsc(computeLabel(input.compute))} |`);
+    lines.push(`| Tech diversity | ${input.tech.length} | score ${c.sTech.toFixed(1)} |`);
+    lines.push(`| Risk | ${input.risk}/10 | score ${c.sRisk.toFixed(1)} |`);
+    lines.push(`| Final index | ${c.index}/100 | raw=${c.raw.toFixed(1)} · factor=${c.fact.toFixed(2)} |`);
     lines.push("");
 
-    lines.push(`## Suwdested roles & FTE (dettagli)`);
-    lines.push(`| Role | FTE | Responsabilità (lifecycle) | Key skills |`);
+    lines.push(`## Suggested roles & FTE (details)`);
+    lines.push(`| Role | FTE | Responsibilities (lifecycle) | Key skills |`);
     lines.push(`|---|---:|---|---|`);
-    (staff.roles || []).forEach(r => {
+    (staff.roles||[]).forEach(r=>{
       lines.push(`| ${mdEsc(r.name)} | ${r.fte} | ${mdEsc(r.lifecycle)} | ${mdEsc((r.skills||[]).join(", "))} |`);
     });
     lines.push("");
 
-    lines.push(`## Matrix skills (coverage: 0..3)`);
-    lines.push(`| Area | Priorità | Descrizione | Esempi |`);
+    lines.push(`## Skills matrix (coverage: 0..3)`);
+    lines.push(`| Area | Priority | Description | Examples |`);
     lines.push(`|---|---:|---|---|`);
-    FACETS.forEach(f => {
-      const v = pr[f.id] ?? 0;
-      const ex = facetExamples(f.id).join(", ");
-      lines.push(`| ${mdEsc(f.label)} | ${v}/3 | ${mdEsc(f.desc)} | ${mdEsc(ex)} |`);
+    FACETS.forEach(f=>{
+      const v = staff.pri[f.id] ?? 0;
+      lines.push(`| ${mdEsc(f.label)} | ${v}/3 | ${mdEsc(f.desc)} | ${mdEsc(facetExamples(f.id).join(", "))} |`);
     });
     lines.push("");
 
     lines.push(`## Cost chart: under / over staffing`);
-    lines.push(`**Inputs grafico**`);
-    lines.push(`- Recommended: **${recFteRounded} FTE** · Actual: **${actFteRounded} FTE**`);
-    lines.push(`- Costo medio/FTE/anno: **${money(costFteYear)}** · Orizzonte: **${horizonMonths} mesi** · Risk multiplier: **${riskMultiplier.toFixed(1)}×**`);
+    lines.push(`**Chart inputs**`);
+    lines.push(`- Recommended: **${Math.round(recFte*2)/2} FTE** · Actual: **${Math.round(fteActual*2)/2} FTE**`);
+    lines.push(`- Cost/FTE/year: **${money(costFteYear)}** · Horizon: **${horizonMonths} months** · Risk multiplier: **${riskMultiplier.toFixed(1)}×**`);
     lines.push("");
     lines.push(`**Results (estimate)**`);
-    lines.push(`- Recommended total: **${money(costRec.total)}** (salary ${money(costRec.salaryCost)} · under-penalty ${money(costRec.underPenalty)} · over-waste ${money(costRec.overWaste)})`);
-    lines.push(`- Actual total: **${money(costAct.total)}** (salary ${money(costAct.salaryCost)} · under-penalty ${money(costAct.underPenalty)} · over-waste ${money(costAct.overWaste)})`);
-    lines.push(`- Delta (Actual − Recommended): **${costDelta >= 0 ? "+" : "−"}${money(Math.abs(costDelta))}** su ${horizonMonths} mesi`);
+    lines.push(`- Recommended total: **${money(costRec.total)}** (salary ${money(costRec.salaryCost)} · under-penalty ${money(costRec.underPenalty)} · waste ${money(costRec.overWaste)})`);
+    lines.push(`- Actual total: **${money(costAct.total)}** (salary ${money(costAct.salaryCost)} · under-penalty ${money(costAct.underPenalty)} · waste ${money(costAct.overWaste)})`);
+    lines.push(`- Delta (Actual − Recommended): **${costDelta>=0?"+":"−"}${money(Math.abs(costDelta))}** over ${horizonMonths} months`);
     lines.push("");
 
-    lines.push(`## Grafico tempo: time-to-production vs team size`);
-    lines.push(`**Inputs grafico**`);
-    lines.push(`- Scope multiplier: **${scopeMultiplier.toFixed(1)}×** · Handoff/coordination tax: **${handoffTax.toFixed(2)}** · Giorni lavorativi/sett: **${workDaysPerWeek}**`);
+    lines.push(`## Time-to-production chart vs team size`);
+    lines.push(`**Chart inputs**`);
+    lines.push(`- Scope multiplier: **${scopeMultiplier.toFixed(1)}×** · Handoff tax: **${tax.toFixed(2)}** · Working days/week: **${wdPerWeek}**`);
     lines.push("");
     lines.push(`**Results (estimate)**`);
     lines.push(`- Recommended: **${fmtWorkdays(wdRec)}**`);
     lines.push(`- Actual: **${fmtWorkdays(wdAct)}**`);
-    lines.push(`- Delta (Actual − Recommended): **${wdDelta >= 0 ? "+" : "−"}${fmtWorkdays(Math.abs(wdDelta))}**`);
+    lines.push(`- Delta (Actual − Recommended): **${wdDelta>=0?"+":"−"}${fmtWorkdays(Math.abs(wdDelta))}**`);
     lines.push("");
 
-    lines.push(`## Notess`);
-    lines.push(`- ${staff.structureNotes}`);
-    lines.push(`- I grafici sono euristici: servono a ragionare su trade-off (risk/inefficiency/coordination), non a fare un preventivo.`);
-    lines.push("");
-    lines.push(`_Heuristic v1: non sostituisce discovery reale, vincoli di budget, roadmap e domain complexity._`);
-    return lines.join("\n");
+    lines.push(`## Notes`);
+    lines.push(`- Heuristics are for trade-offs (risk/inefficiency/coordination). Validate with real constraints, dependencies and delivery data.`);
+    lines.push(`- For high-criticality systems, prioritize on-call readiness, incident response, compliance evidence, and security controls early.`);
+    return lines.join("\\n");
   }
 
-
   function getLastState(){
-    // Prefer in-memory (works even when localStorage is blocked)
     if(currentState) return currentState;
-    if(window.__LAST_STATE) return window.__LAST_STATE;
-    try {
+    try{
       const raw = localStorage.getItem("devsecops_team_sizer:last");
       if(raw) return JSON.parse(raw);
-    } catch (e) {}
+    }catch(e){}
     return null;
   }
 
@@ -1667,25 +1292,18 @@ function buildMarkdownReport(state){
       overlay.innerHTML = `
         <div style="width:min(860px, calc(100% - 24px)); background: rgba(15,23,48,.98); border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,.35);">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <div style="color: rgba(233,237,245,.95); font-weight:700;">Manual copy</div>
+            <div style="color: rgba(233,237,245,.95); font-weight:800;">Manual copy</div>
             <button id="copyOverlayClose" class="secondary" style="padding:8px 10px; border-radius:12px;">Close</button>
           </div>
           <div style="color: rgba(169,180,207,.95); font-size:12px; margin-top:8px; line-height:1.45;">
-            Your browser may block the Clipboard API su <span style="font-family: ui-monospace;">file://</span>.
-            Select the text and copy with <b>Ctrl+C</b> (o Cmd+C).
+            Browsers may block Clipboard API on <span style="font-family: ui-monospace;">file://</span>. Select the text and copy with <b>Ctrl+C</b> (or Cmd+C).
           </div>
           <textarea id="copyOverlayArea" style="width:100%; margin-top:10px; height: 320px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18); color: #e9edf5; padding:10px; font-family: ui-monospace; font-size:12px; outline:none;"></textarea>
         </div>
       `;
       document.body.appendChild(overlay);
-
-      overlay.querySelector("#copyOverlayClose").addEventListener("click", () => {
-        overlay.remove();
-      });
-      // Close on backdrop click
-      overlay.addEventListener("click", (e) => {
-        if(e.target === overlay) overlay.remove();
-      });
+      overlay.querySelector("#copyOverlayClose").addEventListener("click", () => overlay.remove());
+      overlay.addEventListener("click", (e) => { if(e.target === overlay) overlay.remove(); });
     }
     const area = overlay.querySelector("#copyOverlayArea");
     area.value = md;
@@ -1694,42 +1312,31 @@ function buildMarkdownReport(state){
   }
 
   function fallbackCopyText(textToCopy){
-    // Try legacy copy (often works even in file://)
-    try {
+    try{
       const ta = document.createElement("textarea");
       ta.value = textToCopy;
-      ta.setAttribute("readonly", "");
+      ta.setAttribute("readonly","");
       ta.style.position = "fixed";
       ta.style.left = "-9999px";
       ta.style.top = "0";
       document.body.appendChild(ta);
       ta.focus();
       ta.select();
-      ta.setSelectionRange(0, ta.value.length);
       const ok = document.execCommand("copy");
       document.body.removeChild(ta);
       if(ok){ toast("Markdown report copied to clipboard."); return true; }
-    } catch (e) {}
-    // Last resort: manual dialog
+    }catch(e){}
     showCopyDialog(textToCopy);
     return false;
   }
 
   function copyMarkdown(){
     let state = getLastState();
-    if(!state){
-      // If nothing is computed yet, compute now
-      state = calculate();
-    }
+    if(!state) state = calculate();
     const md = buildMarkdownReport(state);
-
-    // Clipboard API works only on secure contexts (https:// or localhost) in many browsers.
     if(navigator.clipboard && typeof navigator.clipboard.writeText === "function"){
-      navigator.clipboard.writeText(md).then(() => {
-        toast("Markdown report copied to clipboard.");
-      }).catch(() => {
-        fallbackCopyText(md);
-      });
+      navigator.clipboard.writeText(md).then(() => toast("Markdown report copied to clipboard."))
+        .catch(() => fallbackCopyText(md));
       return;
     }
     fallbackCopyText(md);
@@ -1737,68 +1344,110 @@ function buildMarkdownReport(state){
 
   function downloadJson(){
     let state = getLastState();
-    if(!state){ state = calculate(); }
+    if(!state) state = calculate();
     const blob = new Blob([JSON.stringify(state, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `devsecops-team-sizer-${new Date().toISOString().slice(0,10)}.json`;
+    a.href = url;
+    a.download = "devsecops-team-sizer.json";
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(a.href);
+    URL.revokeObjectURL(url);
   }
 
-  // tiny toast
-  let toastT = null;
-  function toast(msg){
-    clearTimeout(toastT);
-    let t = document.getElementById("toast");
-    if(!t){
-      t = document.createElement("div");
-      t.id = "toast";
-      t.style.position = "fixed";
-      t.style.left = "50%";
-      t.style.bottom = "18px";
-      t.style.transform = "translateX(-50%)";
-      t.style.padding = "10px 12px";
-      t.style.borderRadius = "12px";
-      t.style.background = "rgba(0,0,0,.65)";
-      t.style.border = "1px solid rgba(255,255,255,.16)";
-      t.style.color = "white";
-      t.style.fontSize = "13px";
-      t.style.zIndex = "9999";
-      t.style.backdropFilter = "blur(8px)";
-      document.body.appendChild(t);
-    }
-    t.textContent = msg;
-    t.style.display = "block";
-    toastT = setTimeout(() => { t.style.display = "none"; }, 1800);
+  function wireChartInputs(){
+    const ids = ["fteActual","costFteYear","horizonMonths","riskMultiplier","scopeMultiplier","handoffTax","workDaysPerWeek"];
+    ids.forEach(id=>{
+      const e = el(id);
+      if(!e) return;
+      const onAny = () => updateCharts();
+      e.addEventListener("input", onAny);
+      e.addEventListener("change", onAny);
+    });
   }
 
   // -----------------------------
   // Buttons
-  // -----------------------------
-  el("btnCalc").addEventListener("click", calculate);
-  el("btnRandom").addEventListener("click", randomExample);
-  el("btnSave").addEventListener("click", () => { saveScenario(); toast("Scenario saved (localStorage)."); });
-  el("btnReset").addEventListener("click", () => { reset(); calculate(); toast("Reset completed."); });
+  el("btnCalc").addEventListener("click", () => { calculate(); });
+  el("btnDownloadJson").addEventListener("click", () => { downloadJson(); });
 
-  el("btnCopyMd").addEventListener("click", copyMarkdown);
-  el("btnDownloadJson").addEventListener("click", downloadJson);
+  el("btnExample").addEventListener("click", () => {
+    el("pattern").value = "microservices";
+    el("maturity").value = "1";
+    el("traffic").value = "120";
+    el("trafficUnit").value = "rps";
+    el("compute").value = "7";
+    el("risk").value = "9";
+    el("bias").value = "balanced";
+    syncSliders();
+    // select more tech
+    ["frontend","api","grpc","sqldb","cache","broker","stream","k8s","iac","obs","sec","cicd"].forEach(id => selectedTech.add(id));
+    // refresh chip UI
+    document.querySelectorAll(".chip").forEach(ch => {
+      const id = ch.dataset.id;
+      if(selectedTech.has(id)) ch.classList.add("on");
+      else ch.classList.remove("on");
+    });
+    calculate();
+    toast("Example loaded.");
+  });
 
-  // Auto-calc on first load with defaults (and load last if available)
-  const last = localStorage.getItem("devsecops_team_sizer:last");
-  if(last){
+  el("btnSave").addEventListener("click", () => {
+    const state = getLastState() || calculate();
     try{
-      const state = JSON.parse(last);
-      if(state?.input) setInputs(state.input);
-    }catch{}
-  } else {
-    reset();
+      localStorage.setItem("devsecops_team_sizer:scenario", JSON.stringify(state));
+      toast("Scenario saved (localStorage).");
+    }catch(e){
+      toast("Could not save scenario.");
+    }
+  });
+
+  el("btnReset").addEventListener("click", () => {
+    try{
+      localStorage.removeItem("devsecops_team_sizer:last");
+      localStorage.removeItem("devsecops_team_sizer:scenario");
+    }catch(e){}
+    location.reload();
+  });
+
+  // -----------------------------
+  // Init: load saved scenario if present
+  function init(){
+    wireChartInputs();
+    try{
+      const saved = localStorage.getItem("devsecops_team_sizer:scenario");
+      if(saved){
+        const state = JSON.parse(saved);
+        // apply inputs
+        el("pattern").value = state.input.pattern;
+        el("maturity").value = String(state.input.maturity);
+        el("traffic").value = String(state.input.traffic);
+        el("trafficUnit").value = state.input.trafficUnit;
+        el("compute").value = String(state.input.compute);
+        el("risk").value = String(state.input.risk);
+        el("bias").value = state.input.bias;
+        syncSliders();
+
+        selectedTech.clear();
+        (state.input.tech||[]).forEach(id => selectedTech.add(id));
+        document.querySelectorAll(".chip").forEach(ch => {
+          const id = ch.dataset.id;
+          if(selectedTech.has(id)) ch.classList.add("on");
+          else ch.classList.remove("on");
+        });
+
+        // render using stored computed state or recalc for safety
+        calculate();
+      } else {
+        calculate(); // initial baseline
+      }
+    }catch(e){
+      calculate();
+    }
   }
-  updateRanges();
-  wireChartInputss();
-  calculate();
+
+  init();
 })();
 </script>
 </body>
